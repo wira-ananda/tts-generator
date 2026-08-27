@@ -13,7 +13,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "bun run test:unit -- --run"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -36,5 +36,8 @@
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16",
 		"vitest": "^4.1.8"
+	},
+	"dependencies": {
+		"lucide-svelte": "^1.0.1"
 	}
 }

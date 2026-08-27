@@ -1,10 +1,6 @@
 import { browser } from '$app/environment';
 
-import {
-	THEME_MODES,
-	type ResolvedTheme,
-	type ThemeMode
-} from '$lib/theme/theme.types';
+import { THEME_MODES, type ResolvedTheme, type ThemeMode } from '$lib/theme/theme.types';
 
 export const THEME_STORAGE_KEY = 'tts-generator:theme';
 
@@ -84,9 +80,7 @@ export function setThemeMode(themeMode: ThemeMode): void {
 /**
  * Menyinkronkan system theme ketika preference OS berubah.
  */
-export function watchSystemTheme(
-	onChange: (resolvedTheme: ResolvedTheme) => void
-): () => void {
+export function watchSystemTheme(onChange: (resolvedTheme: ResolvedTheme) => void): () => void {
 	if (!browser) {
 		return () => undefined;
 	}

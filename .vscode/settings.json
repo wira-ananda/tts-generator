@@ -1,5 +1,140 @@
 {
 	"files.associations": {
 		"*.css": "tailwindcss"
+	},
+	// ==========================================
+	// GLOBAL SETTINGS (Readability & Consistency)
+	// ==========================================
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"editor.tabSize": 2, // Standar untuk JS/TS/Svelte/Vue/Astro/Dart
+
+	// ==========================================
+	// SVELTE
+	// ==========================================
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode"
+	},
+
+	// ==========================================
+	// VUE
+	// ==========================================
+	"[vue]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	// ==========================================
+	// ASTRO
+	// ==========================================
+	"[astro]": {
+		"editor.defaultFormatter": "astro-build.astro-vscode"
+	},
+
+	// ==========================================
+	// TYPESCRIPT / JAVASCRIPT (Next.js, React, React Native, NestJS)
+	// ==========================================
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	// ==========================================
+	// GO
+	// ==========================================
+	"[go]": {
+		"editor.defaultFormatter": "golang.go",
+		"editor.codeActionsOnSave": {
+			"source.organizeImports": "explicit"
+		}
+	},
+
+	// ==========================================
+	// PHP / LARAVEL
+	// ==========================================
+	"[php]": {
+		"editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
+		"editor.tabSize": 4 // Standar PSR untuk PHP
+	},
+
+	// ==========================================
+	// PYTHON (FastAPI, Django, Flask)
+	// ==========================================
+	"[python]": {
+		"editor.defaultFormatter": "ms-python.black-formatter",
+		"editor.tabSize": 4 // Standar PEP 8 untuk Python
+	},
+	"[django-html]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jinja-html]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	// ==========================================
+	// MOBILE (Dart/Flutter, Swift, Kotlin)
+	// ==========================================
+	"[dart]": {
+		"editor.defaultFormatter": "Dart-Code.dart-code",
+		"editor.rulers": [80], // Standar panduan visual line length Dart
+		"editor.selectionHighlight": false
+	},
+	"[swift]": {
+		"editor.defaultFormatter": "sswg.swift-lang",
+		"editor.tabSize": 4
+	},
+	"[kotlin]": {
+		"editor.defaultFormatter": "fwcd.kotlin",
+		"editor.tabSize": 4
+	},
+
+	// ==========================================
+	// PRISMA
+	// ==========================================
+	"[prisma]": {
+		"editor.defaultFormatter": "Prisma.prisma"
+	},
+
+	// ==========================================
+	// STYLING & EMMET (Tailwind CSS)
+	// ==========================================
+	"emmet.includeLanguages": {
+		"javascript": "javascriptreact",
+		"typescript": "typescriptreact",
+		"svelte": "html",
+		"vue": "html",
+		"astro": "html",
+		"django-html": "html",
+		"jinja-html": "html"
+	},
+	"tailwindCSS.emmetCompletions": true,
+	"editor.quickSuggestions": {
+		"strings": true // Berguna untuk auto-complete class Tailwind di dalam string
+	},
+
+	// ==========================================
+	// JSON, HTML, CSS
+	// ==========================================
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[html]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[css]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	}
 }
