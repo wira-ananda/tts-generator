@@ -129,7 +129,7 @@
 				dark:text-gh-dark-subtle-fg
 			"
 		>
-			TTS GENERATOR · LOCAL-FIRST
+			TTS GENERATOR · BETA VERSION
 		</div>
 
 		<a
