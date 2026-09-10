@@ -123,9 +123,16 @@ export function readCrosswordDraft(): CrosswordDraft | null {
 			return null;
 		}
 
+		/**
+		 * Draft lama (sebelum fitur judul TTS ada) tidak mempunyai
+		 * field title. Default ke string kosong supaya tetap kompatibel.
+		 */
+		const title = typeof parsedDraft.title === 'string' ? parsedDraft.title : '';
+
 		return {
 			version: 1,
 			entries,
+			title,
 			updatedAt: parsedDraft.updatedAt
 		};
 	} catch {
@@ -136,7 +143,7 @@ export function readCrosswordDraft(): CrosswordDraft | null {
 /**
  * Menyimpan current draft ke localStorage.
  */
-export function saveCrosswordDraft(entries: CrosswordEntry[]): PersistenceResult {
+export function saveCrosswordDraft(entries: CrosswordEntry[], title: string): PersistenceResult {
 	if (!browser) {
 		return {
 			success: false,
@@ -149,6 +156,7 @@ export function saveCrosswordDraft(entries: CrosswordEntry[]): PersistenceResult
 	const draft: CrosswordDraft = {
 		version: 1,
 		entries: cloneCrosswordEntries(entries),
+		title,
 		updatedAt
 	};
 

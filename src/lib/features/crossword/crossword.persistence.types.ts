@@ -5,6 +5,7 @@ export type CrosswordSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 export type CrosswordDraft = {
 	version: 1;
 	entries: CrosswordEntry[];
+	title: string;
 	updatedAt: string;
 };
 

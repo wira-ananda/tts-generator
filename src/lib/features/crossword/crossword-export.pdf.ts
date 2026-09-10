@@ -1,16 +1,42 @@
 import type { Color, PDFFont, PDFPage } from 'pdf-lib';
 
-import type { CrosswordPdfResult } from '$lib/features/crossword/crossword-export.types';
+import type {
+	CrosswordPdfMode,
+	CrosswordPdfResult
+} from '$lib/features/crossword/crossword-export.types';
+
+import { MAX_CROSSWORD_TITLE_LENGTH } from '$lib/features/crossword/crossword.constants';
 
 import type { CrosswordEntry, CrosswordLayout } from '$lib/features/crossword/crossword.types';
 
 import { normalizeAnswer } from '$lib/features/crossword/crossword.utils';
 
+/**
+ * Halaman "Daftar Soal" selalu portrait A4.
+ *
+ * Ukuran kertasnya dibuat fix dan terpisah dari halaman grid supaya
+ * daftar soal tetap nyaman dibaca/di-print sebagai teks, tidak ikut
+ * berubah mengikuti seberapa besar grid crossword-nya.
+ */
 const A4_PORTRAIT: [number, number] = [595.28, 841.89];
 
-const A4_LANDSCAPE: [number, number] = [841.89, 595.28];
+/**
+ * Halaman grid (TTS kosong & kunci jawaban) selalu landscape A3.
+ *
+ * Grid crossword bisa sangat lebar/tinggi (puluhan kolom/baris), jadi
+ * kertas dibuat fix ke A3 supaya cell tidak jadi kekecilan dibandingkan
+ * dipaksakan ke A4.
+ */
+const A3_LANDSCAPE: [number, number] = [1190.55, 841.89];
 
 const PAGE_MARGIN = 44;
+
+const MAX_CELL_SIZE = 24;
+
+/**
+ * Ruang vertikal yang disisakan di bagian bawah grid page untuk footer.
+ */
+const FOOTER_RESERVED_HEIGHT = 40;
 
 type PdfColors = {
 	black: Color;
@@ -23,8 +49,8 @@ function toPdfSafeText(value: string): string {
 		.normalize('NFKD')
 		.replace(/[\u0300-\u036f]/g, '')
 		.replace(/[–—]/g, '-')
-		.replace(/[“”]/g, '"')
-		.replace(/[‘’]/g, "'")
+		.replace(/[""]/g, '"')
+		.replace(/['']/g, "'")
 		.replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
 }
 
@@ -72,22 +98,53 @@ function drawPageFooter(page: PDFPage, font: PDFFont, colors: PdfColors): void {
 	});
 }
 
-function getGridPageSize(layout: CrosswordLayout): [number, number] {
-	const calculateCellSize = (size: [number, number]): number => {
-		const [width, height] = size;
+/**
+ * Menggambar judul TTS (jika diisi) sebagai baris kecil di atas heading
+ * section (TTS Kosong / Daftar Soal / Kunci Jawaban).
+ *
+ * Mengembalikan posisi y setelah baris judul terakhir, atau y awal apa
+ * adanya jika judul kosong, supaya heading di bawahnya tetap konsisten
+ * posisinya baik judul diisi maupun tidak.
+ */
+function drawCrosswordTitle(
+	page: PDFPage,
+	crosswordTitle: string,
+	startY: number,
+	fontSize: number,
+	boldFont: PDFFont,
+	colors: PdfColors
+): number {
+	const trimmedTitle = crosswordTitle.trim();
 
-		return Math.min(
-			24,
+	if (!trimmedTitle) {
+		return startY;
+	}
 
-			(width - PAGE_MARGIN * 2) / layout.width,
+	const { width } = page.getSize();
 
-			(height - 150) / layout.height
-		);
-	};
+	const maxWidth = width - PAGE_MARGIN * 2;
 
-	return calculateCellSize(A4_LANDSCAPE) > calculateCellSize(A4_PORTRAIT)
-		? A4_LANDSCAPE
-		: A4_PORTRAIT;
+	const titleLines = wrapPdfText(trimmedTitle, boldFont, fontSize, maxWidth);
+
+	let y = startY;
+
+	for (const line of titleLines) {
+		page.drawText(line, {
+			x: PAGE_MARGIN,
+
+			y,
+
+			size: fontSize,
+
+			font: boldFont,
+
+			color: colors.muted
+		});
+
+		y -= fontSize + 5;
+	}
+
+	return y - 4;
 }
 
 function drawCrosswordGrid(
@@ -96,16 +153,17 @@ function drawCrosswordGrid(
 	font: PDFFont,
 	boldFont: PDFFont,
 	colors: PdfColors,
-	showAnswers: boolean
+	showAnswers: boolean,
+	contentTop: number
 ): void {
-	const { width: pageWidth, height: pageHeight } = page.getSize();
+	const { width: pageWidth } = page.getSize();
 
 	const availableWidth = pageWidth - PAGE_MARGIN * 2;
 
-	const availableHeight = pageHeight - 150;
+	const availableHeight = contentTop - FOOTER_RESERVED_HEIGHT;
 
 	const cellSize = Math.min(
-		24,
+		MAX_CELL_SIZE,
 
 		availableWidth / layout.width,
 
@@ -118,7 +176,7 @@ function drawCrosswordGrid(
 
 	const startX = (pageWidth - gridWidth) / 2;
 
-	const startY = (pageHeight - gridHeight) / 2 - 8;
+	const startY = FOOTER_RESERVED_HEIGHT + (availableHeight - gridHeight) / 2;
 
 	for (const cell of layout.cells) {
 		const x = startX + cell.x * cellSize;
@@ -180,18 +238,23 @@ function drawGridSection(
 	font: PDFFont,
 	boldFont: PDFFont,
 	colors: PdfColors,
-	title: string,
+	heading: string,
 	description: string,
-	showAnswers: boolean
+	showAnswers: boolean,
+	crosswordTitle: string
 ): void {
-	const page = pdfDocument.addPage(getGridPageSize(layout));
+	const page = pdfDocument.addPage(A3_LANDSCAPE);
 
 	const { height } = page.getSize();
 
-	page.drawText(title, {
+	let y = height - PAGE_MARGIN;
+
+	y = drawCrosswordTitle(page, crosswordTitle, y, 13, boldFont, colors);
+
+	page.drawText(heading, {
 		x: PAGE_MARGIN,
 
-		y: height - PAGE_MARGIN,
+		y,
 
 		size: 18,
 
@@ -200,10 +263,12 @@ function drawGridSection(
 		color: colors.black
 	});
 
+	y -= 20;
+
 	page.drawText(description, {
 		x: PAGE_MARGIN,
 
-		y: height - PAGE_MARGIN - 20,
+		y,
 
 		size: 9,
 
@@ -212,7 +277,9 @@ function drawGridSection(
 		color: colors.muted
 	});
 
-	drawCrosswordGrid(page, layout, font, boldFont, colors, showAnswers);
+	y -= 16;
+
+	drawCrosswordGrid(page, layout, font, boldFont, colors, showAnswers, y);
 
 	drawPageFooter(page, font, colors);
 }
@@ -223,7 +290,8 @@ function drawQuestionPages(
 	layout: CrosswordLayout,
 	font: PDFFont,
 	boldFont: PDFFont,
-	colors: PdfColors
+	colors: PdfColors,
+	crosswordTitle: string
 ): void {
 	const directionByEntryId = new Map(
 		layout.placements.map((placement) => [placement.entryId, placement.direction])
@@ -241,6 +309,8 @@ function drawQuestionPages(
 	let y = page.getHeight() - PAGE_MARGIN;
 
 	function drawHeader(continued = false): void {
+		y = drawCrosswordTitle(page, crosswordTitle, y, 11, boldFont, colors);
+
 		page.drawText(continued ? 'Daftar Soal - Lanjutan' : 'Daftar Soal', {
 			x: PAGE_MARGIN,
 
@@ -301,36 +371,90 @@ function drawQuestionPages(
 	drawPageFooter(page, font, colors);
 }
 
-function createPdfFileName(): string {
+/**
+ * Membersihkan judul supaya aman dipakai sebagai nama file di berbagai OS.
+ */
+function sanitizePdfFileNameSegment(value: string): string {
+	return value
+		.replace(/[\\/:*?"<>|]+/g, '-')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.slice(0, MAX_CROSSWORD_TITLE_LENGTH);
+}
+
+/**
+ * Suffix nama file per mode, supaya 3 mode download tidak saling
+ * menimpa file satu sama lain kalau judulnya sama.
+ *
+ * Mode 'complete' sengaja tidak diberi suffix supaya nama file tetap
+ * persis sama dengan judul TTS, seperti behavior sebelum ada mode lain.
+ */
+const PDF_MODE_FILE_NAME_SUFFIX: Record<CrosswordPdfMode, string> = {
+	complete: '',
+	'puzzle-and-questions': ' - TTS & Soal',
+	'puzzle-only': ' - TTS Kosong'
+};
+
+const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
+	complete: '',
+	'puzzle-and-questions': '-tts-soal',
+	'puzzle-only': '-tts-kosong'
+};
+
+function createTimestampPdfFileName(mode: CrosswordPdfMode): string {
 	const date = new Date();
 
 	const pad = (value: number): string => String(value).padStart(2, '0');
 
-	return (
-		[
-			'tts',
-			`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-			`${pad(date.getHours())}${pad(date.getMinutes())}`
-		].join('-') + '.pdf'
-	);
+	const base = [
+		'tts',
+		`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+		`${pad(date.getHours())}${pad(date.getMinutes())}`
+	].join('-');
+
+	return `${base}${PDF_MODE_TIMESTAMP_SUFFIX[mode]}.pdf`;
 }
 
 /**
- * Membuat satu PDF berisi:
+ * Judul TTS (jika diisi) dipakai sebagai nama file.
  *
- * 1. TTS kosong
- * 2. Daftar soal
- * 3. Kunci jawaban
+ * Fallback ke nama berbasis tanggal/jam jika judul kosong, atau
+ * menjadi kosong setelah disanitasi (misal isinya simbol semua).
+ */
+function createPdfFileName(crosswordTitle: string, mode: CrosswordPdfMode): string {
+	const safeTitle = sanitizePdfFileNameSegment(crosswordTitle);
+
+	if (!safeTitle) {
+		return createTimestampPdfFileName(mode);
+	}
+
+	return `${safeTitle}${PDF_MODE_FILE_NAME_SUFFIX[mode]}.pdf`;
+}
+
+/**
+ * Membuat satu PDF sesuai mode:
+ *
+ * - 'complete': TTS kosong (A3 landscape) + Daftar soal (A4 portrait) +
+ *   Kunci jawaban (A3 landscape).
+ * - 'puzzle-and-questions': TTS kosong (A3 landscape) + Daftar soal
+ *   (A4 portrait) saja, tanpa Kunci jawaban.
+ * - 'puzzle-only': TTS kosong (A3 landscape) saja, tanpa Daftar soal
+ *   dan tanpa Kunci jawaban.
+ *
+ * crosswordTitle bersifat opsional. Jika diisi, judul akan muncul
+ * di setiap halaman dan dipakai sebagai PDF document title.
  */
 export async function generateCrosswordPdfBytes(
 	entries: CrosswordEntry[],
-	layout: CrosswordLayout
+	layout: CrosswordLayout,
+	crosswordTitle = '',
+	mode: CrosswordPdfMode = 'complete'
 ): Promise<Uint8Array> {
 	const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib');
 
 	const pdfDocument = await PDFDocument.create();
 
-	pdfDocument.setTitle('TTS Generator');
+	pdfDocument.setTitle(crosswordTitle.trim() || 'TTS Generator');
 
 	pdfDocument.setAuthor('Wiraa');
 
@@ -346,6 +470,16 @@ export async function generateCrosswordPdfBytes(
 		border: rgb(0.5, 0.5, 0.5)
 	};
 
+	/**
+	 * Deskripsi halaman TTS Kosong menyesuaikan mode: kalau tidak ada
+	 * halaman Daftar Soal (mode 'puzzle-only'), jangan menyebut
+	 * "halaman berikutnya" karena halaman itu tidak ada.
+	 */
+	const blankGridDescription =
+		mode === 'puzzle-only'
+			? 'Kotak kosong untuk diisi jawaban teka-teki silang.'
+			: 'Isi kotak berdasarkan daftar soal pada halaman berikutnya.';
+
 	drawGridSection(
 		pdfDocument,
 		layout,
@@ -353,36 +487,48 @@ export async function generateCrosswordPdfBytes(
 		boldFont,
 		colors,
 		'TTS Kosong',
-		'Isi kotak berdasarkan daftar soal pada halaman berikutnya.',
-		false
+		blankGridDescription,
+		false,
+		crosswordTitle
 	);
 
-	drawQuestionPages(pdfDocument, entries, layout, font, boldFont, colors);
+	if (mode !== 'puzzle-only') {
+		drawQuestionPages(pdfDocument, entries, layout, font, boldFont, colors, crosswordTitle);
+	}
 
-	drawGridSection(
-		pdfDocument,
-		layout,
-		font,
-		boldFont,
-		colors,
-		'Kunci Jawaban',
-		'Crossword lengkap dengan jawaban.',
-		true
-	);
+	if (mode === 'complete') {
+		drawGridSection(
+			pdfDocument,
+			layout,
+			font,
+			boldFont,
+			colors,
+			'Kunci Jawaban',
+			'Crossword lengkap dengan jawaban.',
+			true,
+			crosswordTitle
+		);
+	}
 
 	return pdfDocument.save();
 }
 
 /**
  * Generate kemudian memulai browser download.
+ *
+ * Nama file mengikuti judul TTS (jika diisi) + suffix sesuai mode,
+ * fallback ke nama berbasis tanggal/jam seperti sebelumnya jika judul
+ * kosong.
  */
 export async function downloadCrosswordPdf(
 	entries: CrosswordEntry[],
-	layout: CrosswordLayout
+	layout: CrosswordLayout,
+	crosswordTitle = '',
+	mode: CrosswordPdfMode = 'complete'
 ): Promise<CrosswordPdfResult> {
-	const bytes = await generateCrosswordPdfBytes(entries, layout);
+	const bytes = await generateCrosswordPdfBytes(entries, layout, crosswordTitle, mode);
 
-	const fileName = createPdfFileName();
+	const fileName = createPdfFileName(crosswordTitle, mode);
 
 	const blob = new Blob([bytes], {
 		type: 'application/pdf'

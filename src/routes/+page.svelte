@@ -6,6 +6,7 @@
 	import CrosswordHistoryDialog from '$lib/features/crossword/components/CrosswordHistoryDialog.svelte';
 	import CrosswordImportDialog from '$lib/features/crossword/components/CrosswordImportDialog.svelte';
 	import CrosswordPreview from '$lib/features/crossword/components/CrosswordPreview.svelte';
+	import CrosswordTitleField from '$lib/features/crossword/components/CrosswordTitleField.svelte';
 	import CrosswordToolbar from '$lib/features/crossword/components/CrosswordToolbar.svelte';
 
 	import {
@@ -24,7 +25,10 @@
 
 	import { downloadCrosswordPdf } from '$lib/features/crossword/crossword-export.pdf';
 
-	import type { CrosswordDownloadMeta } from '$lib/features/crossword/crossword-export.types';
+	import type {
+		CrosswordDownloadMeta,
+		CrosswordPdfMode
+	} from '$lib/features/crossword/crossword-export.types';
 
 	import { buildCrosswordLayout } from '$lib/features/crossword/crossword-generator';
 
@@ -54,6 +58,10 @@
 	} from '$lib/features/crossword/crossword.utils';
 
 	let entries = $state<CrosswordEntry[]>(createInitialCrosswordEntries());
+
+	let title = $state('');
+
+	let pdfMode = $state<CrosswordPdfMode>('complete');
 
 	let layout = $state<CrosswordLayout>(createEmptyCrosswordLayout());
 
@@ -110,6 +118,8 @@
 
 			entries = restoredEntries;
 
+			title = storedDraft.title;
+
 			lastSavedAt = storedDraft.updatedAt;
 
 			saveStatus = 'saved';
@@ -147,8 +157,8 @@
 		generationRequestId += 1;
 	}
 
-	function persistDraftImmediately(nextEntries: CrosswordEntry[]): void {
-		const result = saveCrosswordDraft(nextEntries);
+	function persistDraftImmediately(nextEntries: CrosswordEntry[], nextTitle: string): void {
+		const result = saveCrosswordDraft(nextEntries, nextTitle);
 
 		if (!result.success) {
 			saveStatus = 'error';
@@ -161,7 +171,7 @@
 		lastSavedAt = result.savedAt;
 	}
 
-	function scheduleDraftSave(nextEntries: CrosswordEntry[]): void {
+	function scheduleDraftSave(nextEntries: CrosswordEntry[], nextTitle: string): void {
 		if (!isPersistenceReady) {
 			return;
 		}
@@ -175,7 +185,7 @@
 		const entriesSnapshot = cloneCrosswordEntries(nextEntries);
 
 		saveTimer = setTimeout(() => {
-			persistDraftImmediately(entriesSnapshot);
+			persistDraftImmediately(entriesSnapshot, nextTitle);
 
 			saveTimer = undefined;
 		}, CROSSWORD_AUTOSAVE_DELAY_MS);
@@ -244,7 +254,7 @@
 
 		downloadError = null;
 
-		scheduleDraftSave(nextEntries);
+		scheduleDraftSave(nextEntries, title);
 
 		/**
 		 * Mengubah clue saja tidak menjalankan generator ulang.
@@ -255,6 +265,16 @@
 		if (previousSignature !== nextSignature) {
 			scheduleCrosswordGeneration(nextEntries);
 		}
+	}
+
+	function handleTitleChange(nextTitle: string): void {
+		title = nextTitle;
+
+		scheduleDraftSave(entries, nextTitle);
+	}
+
+	function handlePdfModeChange(nextMode: CrosswordPdfMode): void {
+		pdfMode = nextMode;
 	}
 
 	function saveCurrentSnapshot(label: string): void {
@@ -288,7 +308,7 @@
 	function handleSaveVersion(): void {
 		saveCurrentSnapshot('Manual version');
 
-		persistDraftImmediately(entries);
+		persistDraftImmediately(entries, title);
 	}
 
 	function handleRestoreHistory(item: CrosswordHistoryItem): void {
@@ -302,7 +322,7 @@
 
 		downloadError = null;
 
-		persistDraftImmediately(restoredEntries);
+		persistDraftImmediately(restoredEntries, title);
 
 		scheduleCrosswordGeneration(restoredEntries);
 
@@ -326,7 +346,7 @@
 
 		downloadError = null;
 
-		persistDraftImmediately(importedEntries);
+		persistDraftImmediately(importedEntries, title);
 
 		scheduleCrosswordGeneration(importedEntries);
 
@@ -353,7 +373,7 @@
 		const signatureSnapshot = createCrosswordExportSignature(entriesSnapshot, layoutSnapshot);
 
 		try {
-			const result = await downloadCrosswordPdf(entriesSnapshot, layoutSnapshot);
+			const result = await downloadCrosswordPdf(entriesSnapshot, layoutSnapshot, title, pdfMode);
 
 			const nextMeta: CrosswordDownloadMeta = {
 				version: 1,
@@ -434,6 +454,20 @@
 			</p>
 		</div>
 
+		<CrosswordTitleField {title} onChange={handleTitleChange} />
+
+		<CrosswordToolbar
+			{entries}
+			{downloadState}
+			lastDownloadedAt={downloadMeta?.downloadedAt ?? null}
+			canDownload={exportReadiness.ready}
+			disabledReason={exportReadiness.reason}
+			{isDownloading}
+			{downloadError}
+			{pdfMode}
+			onDownload={handleDownloadPdf}
+			onPdfModeChange={handlePdfModeChange}
+		/>
 		<div
 			class="
 				grid gap-4
@@ -444,17 +478,6 @@
 
 			<CrosswordPreview {entries} {layout} {isGenerating} />
 		</div>
-
-		<CrosswordToolbar
-			{entries}
-			{downloadState}
-			lastDownloadedAt={downloadMeta?.downloadedAt ?? null}
-			canDownload={exportReadiness.ready}
-			disabledReason={exportReadiness.reason}
-			{isDownloading}
-			{downloadError}
-			onDownload={handleDownloadPdf}
-		/>
 	</main>
 
 	<AppFooter {saveStatus} {lastSavedAt} />

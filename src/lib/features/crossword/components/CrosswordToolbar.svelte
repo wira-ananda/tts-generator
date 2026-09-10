@@ -5,7 +5,10 @@
 
 	import CrosswordDocxExportButton from '$lib/features/crossword/components/CrosswordDocxExportButton.svelte';
 
-	import type { CrosswordDownloadState } from '$lib/features/crossword/crossword-export.types';
+	import type {
+		CrosswordDownloadState,
+		CrosswordPdfMode
+	} from '$lib/features/crossword/crossword-export.types';
 
 	import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 
@@ -24,7 +27,11 @@
 
 		downloadError: string | null;
 
+		pdfMode: CrosswordPdfMode;
+
 		onDownload: () => void;
+
+		onPdfModeChange: (mode: CrosswordPdfMode) => void;
 	};
 
 	let {
@@ -35,8 +42,16 @@
 		disabledReason,
 		isDownloading,
 		downloadError,
-		onDownload
+		pdfMode,
+		onDownload,
+		onPdfModeChange
 	}: Props = $props();
+
+	function handlePdfModeChange(event: Event): void {
+		const target = event.currentTarget as HTMLSelectElement;
+
+		onPdfModeChange(target.value as CrosswordPdfMode);
+	}
 
 	function formatDownloadTime(value: string | null): string {
 		if (!value) {
@@ -59,7 +74,7 @@
 
 <section
 	class="
-		mt-4
+		mb-4
 		flex min-h-12
 		flex-col gap-3
 		rounded-md
@@ -154,6 +169,44 @@
 		>
 			<!-- Current questions only -->
 			<CrosswordDocxExportButton {entries} />
+
+			<!-- Mode PDF: lengkap / TTS+soal saja / TTS kosong saja -->
+			<select
+				aria-label="Mode download PDF"
+				value={pdfMode}
+				disabled={isDownloading}
+				class="
+					h-8
+					rounded-md
+					border
+					border-gh-light-border
+					bg-gh-light-button
+					px-2
+					text-sm font-medium
+					text-gh-light-fg
+					shadow-gh-button-light
+					transition-colors
+					hover:bg-gh-light-button-hover
+					focus-visible:ring-2
+					focus-visible:ring-gh-light-focus
+					focus-visible:outline-none
+					disabled:cursor-not-allowed
+					disabled:opacity-60
+					dark:border-gh-dark-border
+					dark:bg-gh-dark-button
+					dark:text-gh-dark-fg
+					dark:shadow-gh-button-dark
+					dark:hover:bg-gh-dark-button-hover
+					dark:focus-visible:ring-gh-dark-focus
+				"
+				onchange={handlePdfModeChange}
+			>
+				<option value="complete">PDF Lengkap (TTS + Soal + Kunci)</option>
+
+				<option value="puzzle-and-questions">TTS Kosong + Soal</option>
+
+				<option value="puzzle-only">TTS Kosong saja</option>
+			</select>
 
 			<!-- Complete TTS PDF -->
 			<button
