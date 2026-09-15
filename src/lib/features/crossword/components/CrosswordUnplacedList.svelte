@@ -33,9 +33,6 @@
 			case 'invalid-answer':
 				return 'Jawaban tidak memiliki karakter yang dapat digunakan.';
 
-			case 'duplicate-answer':
-				return 'Jawaban sama dengan jawaban lain setelah normalisasi.';
-
 			case 'no-intersection':
 				return 'Tidak ditemukan huruf yang cocok dengan crossword saat ini.';
 

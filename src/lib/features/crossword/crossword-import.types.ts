@@ -7,6 +7,15 @@ export type CrosswordImportMergeMode = 'append' | 'replace';
 export type CrosswordImportIssueCode =
 	'question-empty' | 'answer-empty' | 'invalid-answer' | 'duplicate-import' | 'duplicate-existing';
 
+/**
+ * Warning tidak menggagalkan import — row tetap masuk ke validRows.
+ *
+ * Dipakai untuk kasus answer yang sama tapi soal-nya berbeda, karena
+ * itu bukan duplicate row yang sesungguhnya (lihat CrosswordImportIssueCode
+ * untuk duplicate row asli: soal DAN answer sama persis).
+ */
+export type CrosswordImportWarningCode = 'duplicate-answer-import' | 'duplicate-answer-existing';
+
 export type CrosswordImportRawRow = {
 	sourceRowNumber: number;
 	question: string;
@@ -39,6 +48,16 @@ export type CrosswordImportIssue = {
 	answer?: string;
 };
 
+export type CrosswordImportWarning = {
+	rowNumber: number;
+
+	code: CrosswordImportWarningCode;
+
+	message: string;
+
+	answer?: string;
+};
+
 export type CrosswordImportValidation = {
 	totalRowCount: number;
 
@@ -46,11 +65,15 @@ export type CrosswordImportValidation = {
 
 	issues: CrosswordImportIssue[];
 
+	warnings: CrosswordImportWarning[];
+
 	validRowCount: number;
 
 	invalidRowCount: number;
 
 	duplicateRowCount: number;
+
+	duplicateAnswerWarningCount: number;
 
 	capacity: number;
 

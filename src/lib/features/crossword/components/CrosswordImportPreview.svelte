@@ -28,6 +28,12 @@
 	let visibleIssues = $derived(validation.issues.slice(0, CROSSWORD_IMPORT_MAX_VISIBLE_ISSUES));
 
 	let hiddenIssueCount = $derived(Math.max(0, validation.issues.length - visibleIssues.length));
+
+	let visibleWarnings = $derived(validation.warnings.slice(0, CROSSWORD_IMPORT_MAX_VISIBLE_ISSUES));
+
+	let hiddenWarningCount = $derived(
+		Math.max(0, validation.warnings.length - visibleWarnings.length)
+	);
 </script>
 
 <div class="space-y-4">
@@ -204,7 +210,7 @@
 			rounded-md
 			border border-gh-light-border
 			bg-gh-light-canvas
-			sm:grid-cols-4
+			sm:grid-cols-5
 			dark:border-gh-dark-border
 			dark:bg-gh-dark-canvas
 		"
@@ -322,6 +328,38 @@
 				"
 			>
 				{validation.duplicateRowCount}
+			</p>
+		</div>
+
+		<div
+			class="
+				border-t
+				border-gh-light-border-muted
+				p-3
+				sm:border-t-0
+				sm:border-l
+				dark:border-gh-dark-border-muted
+			"
+		>
+			<p
+				class="
+					text-[11px]
+					text-gh-light-muted
+					dark:text-gh-dark-muted
+				"
+			>
+				Warnings
+			</p>
+
+			<p
+				class="
+					mt-0.5
+					text-sm font-semibold
+					text-gh-light-attention
+					dark:text-gh-dark-attention
+				"
+			>
+				{validation.duplicateAnswerWarningCount}
 			</p>
 		</div>
 	</section>
@@ -529,6 +567,91 @@
 						{/each}
 					</tbody>
 				</table>
+			</div>
+		</section>
+	{/if}
+
+	{#if visibleWarnings.length > 0}
+		<section
+			class="
+				overflow-hidden
+				rounded-md
+				border
+				border-gh-light-attention/30
+				dark:border-gh-dark-attention/30
+			"
+		>
+			<header
+				class="
+					flex min-h-9
+					items-center
+					border-b
+					border-gh-light-attention/20
+					bg-gh-light-attention-muted
+					px-3
+					dark:border-gh-dark-attention/20
+					dark:bg-gh-dark-attention-muted
+				"
+			>
+				<h3
+					class="
+						text-xs font-semibold
+						text-gh-light-attention
+						dark:text-gh-dark-attention
+					"
+				>
+					Warnings (tetap diimport)
+				</h3>
+			</header>
+
+			<div
+				class="
+					max-h-40
+					space-y-2
+					overflow-y-auto
+					p-3
+				"
+			>
+				{#each visibleWarnings as warning (`${warning.rowNumber}-${warning.code}`)}
+					<div
+						class="
+							flex gap-2
+							text-xs leading-5
+						"
+					>
+						<span
+							class="
+								shrink-0 font-semibold
+								text-gh-light-fg
+								dark:text-gh-dark-fg
+							"
+						>
+							Row {warning.rowNumber}
+						</span>
+
+						<span
+							class="
+								text-gh-light-muted
+								dark:text-gh-dark-muted
+							"
+						>
+							{warning.message}
+						</span>
+					</div>
+				{/each}
+
+				{#if hiddenWarningCount > 0}
+					<p
+						class="
+							pt-1
+							text-xs font-medium
+							text-gh-light-muted
+							dark:text-gh-dark-muted
+						"
+					>
+						+ {hiddenWarningCount} warning lainnya tidak ditampilkan.
+					</p>
+				{/if}
 			</div>
 		</section>
 	{/if}

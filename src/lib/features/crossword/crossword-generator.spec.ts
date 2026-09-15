@@ -71,21 +71,17 @@ describe('buildCrosswordLayout', () => {
 		]);
 	});
 
-	it('detects normalized duplicate answers', () => {
+	it('allows two entries with the same normalized answer to both be placed', () => {
 		const layout = buildCrosswordLayout([
 			createEntry('entry-1', 'React'),
 			createEntry('entry-2', 're-act')
 		]);
 
-		expect(layout.placements).toHaveLength(1);
+		expect(layout.placements).toHaveLength(2);
 
-		expect(layout.unplacedEntries).toContainEqual({
-			entryId: 'entry-2',
+		expect(layout.unplacedEntries).toHaveLength(0);
 
-			answer: 'REACT',
-
-			reason: 'duplicate-answer'
-		});
+		expect(layout.intersectionCount).toBeGreaterThanOrEqual(1);
 	});
 
 	it('normalizes all final coordinates to positive grid space', () => {

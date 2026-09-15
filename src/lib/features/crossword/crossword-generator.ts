@@ -601,13 +601,18 @@ function orderEntriesForAttempt(entries: PreparedEntry[], attemptIndex: number):
 
 /**
  * Normalize dan validate raw entries.
+ *
+ * Dua entry boleh punya answer yang sama persis setelah normalisasi
+ * (soal berbeda, jawaban kebetulan sama) — itu bukan error. Keduanya
+ * tetap dicoba ditempatkan seperti entry lain; kalau memang tidak
+ * ketemu posisi yang valid, baru masuk unplaced lewat alur normal
+ * (reason 'no-intersection' / 'no-valid-placement'), bukan langsung
+ * ditolak di sini.
  */
 function prepareEntries(entries: CrosswordEntry[]): PreparedEntriesResult {
 	const preparedEntries: PreparedEntry[] = [];
 
 	const baseUnplaced: CrosswordUnplacedEntry[] = [];
-
-	const seenAnswers = new Map<string, string>();
 
 	entries.forEach((entry, originalIndex) => {
 		if (entry.answer.trim() === '') {
@@ -627,20 +632,6 @@ function prepareEntries(entries: CrosswordEntry[]): PreparedEntriesResult {
 
 			return;
 		}
-
-		if (seenAnswers.has(normalizedAnswer)) {
-			baseUnplaced.push({
-				entryId: entry.id,
-
-				answer: normalizedAnswer,
-
-				reason: 'duplicate-answer'
-			});
-
-			return;
-		}
-
-		seenAnswers.set(normalizedAnswer, entry.id);
 
 		preparedEntries.push({
 			entry,

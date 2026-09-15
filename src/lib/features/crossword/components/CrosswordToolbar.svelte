@@ -74,13 +74,14 @@
 
 <section
 	class="
-		mb-4
-		flex min-h-12
-		flex-col gap-3
-		rounded-md
-		border border-gh-light-border
-		bg-gh-light-subtle
-		px-4 py-2.5
+		mt-4
+		mb-4 flex
+		min-h-12 flex-col
+		gap-3
+		rounded-md border
+		border-gh-light-border
+		bg-gh-light-subtle px-4
+		py-2.5
 		sm:flex-row
 		sm:items-center
 		sm:justify-between
@@ -156,9 +157,10 @@
 
 	<div
 		class="
-			flex shrink-0
-			flex-col
-			items-end gap-1
+			 flex
+			shrink-0
+			flex-col items-end
+			gap-1
 		"
 	>
 		<div
@@ -206,6 +208,12 @@
 				<option value="puzzle-and-questions">TTS Kosong + Soal</option>
 
 				<option value="puzzle-only">TTS Kosong saja</option>
+
+				<option value="puzzle-first-letters">TTS Awalan (huruf pertama)</option>
+
+				<option value="questions-only">Soal saja</option>
+
+				<option value="answer-key-only">Kunci Jawaban saja</option>
 			</select>
 
 			<!-- Complete TTS PDF -->

@@ -10,8 +10,7 @@ export type CrosswordDirection = 'across' | 'down';
 
 export type CrosswordPreviewMode = 'puzzle' | 'answer';
 
-export type CrosswordUnplacedReason =
-	'invalid-answer' | 'duplicate-answer' | 'no-intersection' | 'no-valid-placement';
+export type CrosswordUnplacedReason = 'invalid-answer' | 'no-intersection' | 'no-valid-placement';
 
 export type CrosswordPlacement = {
 	entryId: string;

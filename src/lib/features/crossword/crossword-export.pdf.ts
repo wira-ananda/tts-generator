@@ -31,7 +31,40 @@ const A3_LANDSCAPE: [number, number] = [1190.55, 841.89];
 
 const PAGE_MARGIN = 44;
 
-const MAX_CELL_SIZE = 24;
+/**
+ * Ukuran cell maksimum. Dinaikkan supaya kotak lebih besar dan lebih
+ * nyaman diisi tangan — baru mengecil otomatis kalau grid-nya memang
+ * terlalu lebar/tinggi untuk muat di kertas A3.
+ */
+const MAX_CELL_SIZE = 32;
+
+/**
+ * Setiap cell dibagi 2 zona vertikal, dengan gap kosong di antaranya:
+ * zona nomor (strip kecil di atas) dan zona huruf (sisa ruang di
+ * bawah). Font size nomor & huruf masing-masing hanya mengisi
+ * sebagian dari tinggi zona-nya sendiri (bukan penuh) supaya selalu
+ * ada jarak aman — bukan cuma nggak numpuk secara matematis, tapi
+ * benar-benar ada spasi kosong di antara keduanya secara visual.
+ */
+const NUMBER_ZONE_HEIGHT_RATIO = 0.32;
+
+const NUMBER_ZONE_FILL_RATIO = 0.72;
+
+const ZONE_GAP_RATIO = 0.03;
+
+const MAX_NUMBER_FONT_SIZE = 8;
+
+/**
+ * Floor ini cuma jaring pengaman supaya font size nggak pernah 0/minus
+ * saat proses "shrink to fit" untuk nomor gabungan (mis. "45/78") —
+ * bukan target keterbacaan minimum, karena mencegah tabrakan selalu
+ * lebih penting daripada memaksakan ukuran tertentu.
+ */
+const MIN_NUMBER_FONT_SIZE = 2;
+
+const MAX_LETTER_FONT_SIZE = 16;
+
+const LETTER_ZONE_FONT_RATIO = 0.72;
 
 /**
  * Ruang vertikal yang disisakan di bagian bawah grid page untuk footer.
@@ -147,13 +180,20 @@ function drawCrosswordTitle(
 	return y - 4;
 }
 
+/**
+ * 'none': semua cell kosong (TTS Kosong).
+ * 'first-letters': hanya cell bernomor (starting cell across/down) yang
+ *   diisi huruf, sisanya kosong (TTS Awalan).
+ * 'all': semua cell diisi huruf (Kunci Jawaban).
+ */
+type CrosswordGridLetterReveal = 'none' | 'first-letters' | 'all';
+
 function drawCrosswordGrid(
 	page: PDFPage,
 	layout: CrosswordLayout,
-	font: PDFFont,
 	boldFont: PDFFont,
 	colors: PdfColors,
-	showAnswers: boolean,
+	letterReveal: CrosswordGridLetterReveal,
 	contentTop: number
 ): void {
 	const { width: pageWidth } = page.getSize();
@@ -178,6 +218,19 @@ function drawCrosswordGrid(
 
 	const startY = FOOTER_RESERVED_HEIGHT + (availableHeight - gridHeight) / 2;
 
+	const numberZoneHeight = cellSize * NUMBER_ZONE_HEIGHT_RATIO;
+
+	const zoneGap = Math.max(1, cellSize * ZONE_GAP_RATIO);
+
+	const letterZoneHeight = cellSize - numberZoneHeight - zoneGap;
+
+	const baseNumberFontSize = Math.min(
+		MAX_NUMBER_FONT_SIZE,
+		numberZoneHeight * NUMBER_ZONE_FILL_RATIO
+	);
+
+	const letterFontSize = Math.min(MAX_LETTER_FONT_SIZE, letterZoneHeight * LETTER_ZONE_FONT_RATIO);
+
 	for (const cell of layout.cells) {
 		const x = startX + cell.x * cellSize;
 
@@ -196,34 +249,61 @@ function drawCrosswordGrid(
 			borderColor: colors.black
 		});
 
-		if (cell.numbers && cell.numbers.length > 0) {
-			page.drawText(cell.numbers.join('/'), {
-				x: x + 1.5,
+		const isStartingCell = Boolean(cell.numbers && cell.numbers.length > 0);
 
-				y: y + cellSize - 5,
+		if (isStartingCell) {
+			const numberText = cell.numbers!.join('/');
 
-				size: Math.max(4, cellSize * 0.18),
+			/**
+			 * Cell dengan lebih dari satu nomor (mis. "45/78") bisa lebih
+			 * lebar dari cell-nya sendiri di font size normal — kecilkan
+			 * bertahap sampai muat, supaya tidak meluber ke cell sebelah
+			 * atau ke area huruf.
+			 */
+			let numberFontSize = baseNumberFontSize;
 
-				font,
+			const maxNumberWidth = cellSize - 4;
+
+			while (
+				numberFontSize > MIN_NUMBER_FONT_SIZE &&
+				boldFont.widthOfTextAtSize(numberText, numberFontSize) > maxNumberWidth
+			) {
+				numberFontSize -= 0.5;
+			}
+
+			page.drawText(numberText, {
+				x: x + 2,
+
+				y: y + cellSize - numberFontSize - 1,
+
+				size: numberFontSize,
+
+				font: boldFont,
 
 				color: colors.black
 			});
 		}
 
-		if (!showAnswers) {
+		/**
+		 * 'first-letters' hanya mengisi starting cell (cell yang punya
+		 * nomor) — itu satu-satunya cell yang huruf pertamanya jadi
+		 * petunjuk. Cell lain tetap kosong seperti TTS Kosong biasa.
+		 */
+		const shouldRevealLetter =
+			letterReveal === 'all' || (letterReveal === 'first-letters' && isStartingCell);
+
+		if (!shouldRevealLetter) {
 			continue;
 		}
 
-		const fontSize = Math.min(12, cellSize * 0.5);
-
-		const letterWidth = boldFont.widthOfTextAtSize(cell.letter, fontSize);
+		const letterWidth = boldFont.widthOfTextAtSize(cell.letter, letterFontSize);
 
 		page.drawText(cell.letter, {
 			x: x + (cellSize - letterWidth) / 2,
 
-			y: y + cellSize * 0.29,
+			y: y + (letterZoneHeight - letterFontSize * 0.72) / 2,
 
-			size: fontSize,
+			size: letterFontSize,
 
 			font: boldFont,
 
@@ -240,7 +320,7 @@ function drawGridSection(
 	colors: PdfColors,
 	heading: string,
 	description: string,
-	showAnswers: boolean,
+	letterReveal: CrosswordGridLetterReveal,
 	crosswordTitle: string
 ): void {
 	const page = pdfDocument.addPage(A3_LANDSCAPE);
@@ -279,7 +359,7 @@ function drawGridSection(
 
 	y -= 16;
 
-	drawCrosswordGrid(page, layout, font, boldFont, colors, showAnswers, y);
+	drawCrosswordGrid(page, layout, boldFont, colors, letterReveal, y);
 
 	drawPageFooter(page, font, colors);
 }
@@ -383,7 +463,7 @@ function sanitizePdfFileNameSegment(value: string): string {
 }
 
 /**
- * Suffix nama file per mode, supaya 3 mode download tidak saling
+ * Suffix nama file per mode, supaya semua mode download tidak saling
  * menimpa file satu sama lain kalau judulnya sama.
  *
  * Mode 'complete' sengaja tidak diberi suffix supaya nama file tetap
@@ -392,13 +472,19 @@ function sanitizePdfFileNameSegment(value: string): string {
 const PDF_MODE_FILE_NAME_SUFFIX: Record<CrosswordPdfMode, string> = {
 	complete: '',
 	'puzzle-and-questions': ' - TTS & Soal',
-	'puzzle-only': ' - TTS Kosong'
+	'puzzle-only': ' - TTS Kosong',
+	'puzzle-first-letters': ' - TTS Awalan',
+	'questions-only': ' - Soal',
+	'answer-key-only': ' - Kunci Jawaban'
 };
 
 const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
 	complete: '',
 	'puzzle-and-questions': '-tts-soal',
-	'puzzle-only': '-tts-kosong'
+	'puzzle-only': '-tts-kosong',
+	'puzzle-first-letters': '-tts-awalan',
+	'questions-only': '-soal',
+	'answer-key-only': '-kunci-jawaban'
 };
 
 function createTimestampPdfFileName(mode: CrosswordPdfMode): string {
@@ -440,6 +526,13 @@ function createPdfFileName(crosswordTitle: string, mode: CrosswordPdfMode): stri
  *   (A4 portrait) saja, tanpa Kunci jawaban.
  * - 'puzzle-only': TTS kosong (A3 landscape) saja, tanpa Daftar soal
  *   dan tanpa Kunci jawaban.
+ * - 'puzzle-first-letters': TTS Awalan (A3 landscape) saja — huruf pertama
+ *   tiap nomor terisi sebagai petunjuk, tanpa Daftar soal dan tanpa
+ *   Kunci jawaban.
+ * - 'questions-only': Daftar soal (A4 portrait) saja, tanpa halaman grid
+ *   sama sekali.
+ * - 'answer-key-only': Kunci jawaban (A3 landscape) saja, tanpa Daftar
+ *   soal.
  *
  * crosswordTitle bersifat opsional. Jika diisi, judul akan muncul
  * di setiap halaman dan dipakai sebagai PDF document title.
@@ -470,33 +563,25 @@ export async function generateCrosswordPdfBytes(
 		border: rgb(0.5, 0.5, 0.5)
 	};
 
-	/**
-	 * Deskripsi halaman TTS Kosong menyesuaikan mode: kalau tidak ada
-	 * halaman Daftar Soal (mode 'puzzle-only'), jangan menyebut
-	 * "halaman berikutnya" karena halaman itu tidak ada.
-	 */
-	const blankGridDescription =
-		mode === 'puzzle-only'
-			? 'Kotak kosong untuk diisi jawaban teka-teki silang.'
-			: 'Isi kotak berdasarkan daftar soal pada halaman berikutnya.';
+	const drawBlankGrid = (description: string): void => {
+		drawGridSection(
+			pdfDocument,
+			layout,
+			font,
+			boldFont,
+			colors,
+			'TTS Kosong',
+			description,
+			'none',
+			crosswordTitle
+		);
+	};
 
-	drawGridSection(
-		pdfDocument,
-		layout,
-		font,
-		boldFont,
-		colors,
-		'TTS Kosong',
-		blankGridDescription,
-		false,
-		crosswordTitle
-	);
-
-	if (mode !== 'puzzle-only') {
+	const drawQuestions = (): void => {
 		drawQuestionPages(pdfDocument, entries, layout, font, boldFont, colors, crosswordTitle);
-	}
+	};
 
-	if (mode === 'complete') {
+	const drawAnswerKey = (): void => {
 		drawGridSection(
 			pdfDocument,
 			layout,
@@ -505,9 +590,74 @@ export async function generateCrosswordPdfBytes(
 			colors,
 			'Kunci Jawaban',
 			'Crossword lengkap dengan jawaban.',
-			true,
+			'all',
 			crosswordTitle
 		);
+	};
+
+	switch (mode) {
+		case 'puzzle-first-letters': {
+			drawGridSection(
+				pdfDocument,
+				layout,
+				font,
+				boldFont,
+				colors,
+				'TTS Awalan',
+				'Huruf pertama setiap nomor sudah diisi sebagai petunjuk.',
+				'first-letters',
+				crosswordTitle
+			);
+
+			break;
+		}
+
+		case 'puzzle-only': {
+			drawBlankGrid('Kotak kosong untuk diisi jawaban teka-teki silang.');
+
+			break;
+		}
+
+		case 'questions-only': {
+			drawQuestions();
+
+			break;
+		}
+
+		case 'answer-key-only': {
+			drawAnswerKey();
+
+			break;
+		}
+
+		case 'puzzle-and-questions': {
+			drawBlankGrid('Isi kotak berdasarkan daftar soal pada halaman berikutnya.');
+
+			drawQuestions();
+
+			break;
+		}
+
+		case 'complete': {
+			drawBlankGrid('Isi kotak berdasarkan daftar soal pada halaman berikutnya.');
+
+			drawQuestions();
+
+			drawAnswerKey();
+
+			break;
+		}
+
+		default: {
+			/**
+			 * Exhaustiveness guard: kalau ada CrosswordPdfMode baru yang
+			 * belum ditangani di atas, TypeScript akan error di sini
+			 * pada saat compile, bukan silently ke-skip saat runtime.
+			 */
+			const unhandledMode: never = mode;
+
+			throw new Error(`Mode PDF tidak dikenali: ${unhandledMode}`);
+		}
 	}
 
 	return pdfDocument.save();
