@@ -88,7 +88,21 @@ type WorkingGrid = Map<string, WorkingCell>;
 
 const INTERSECTION_SCORE = 10_000;
 
-const AREA_GROWTH_PENALTY = 25;
+/**
+ * Halaman grid selalu dicetak di kertas A3 landscape (lebih lebar
+ * daripada tinggi). Grid yang bentuknya juga lebih lebar daripada
+ * tinggi memanfaatkan kertas itu lebih baik — cell-nya bisa jauh
+ * lebih besar dibanding grid yang bentuknya kotak/tinggi.
+ *
+ * Makanya pertumbuhan ke arah tinggi diberi penalty jauh lebih besar
+ * daripada pertumbuhan ke arah lebar, supaya kalau ada pilihan antara
+ * menempatkan entry baru dengan meperlebar grid vs mempertinggi grid
+ * (intersection count-nya sama), generator lebih milih yang
+ * memperlebar.
+ */
+const WIDTH_GROWTH_PENALTY = 10;
+
+const HEIGHT_GROWTH_PENALTY = 35;
 
 const CENTER_DISTANCE_PENALTY = 2;
 
@@ -316,15 +330,13 @@ function calculateCandidateScore(
 
 	const nextMaxY = Math.max(currentBounds.maxY, candidateMaxY);
 
-	const currentArea = currentBounds.width * currentBounds.height;
-
 	const nextWidth = nextMaxX - nextMinX + 1;
 
 	const nextHeight = nextMaxY - nextMinY + 1;
 
-	const nextArea = nextWidth * nextHeight;
+	const widthGrowth = Math.max(0, nextWidth - currentBounds.width);
 
-	const areaGrowth = nextArea - currentArea;
+	const heightGrowth = Math.max(0, nextHeight - currentBounds.height);
 
 	const centerX = (nextMinX + nextMaxX) / 2;
 
@@ -334,7 +346,8 @@ function calculateCandidateScore(
 
 	return (
 		intersections * INTERSECTION_SCORE -
-		areaGrowth * AREA_GROWTH_PENALTY -
+		widthGrowth * WIDTH_GROWTH_PENALTY -
+		heightGrowth * HEIGHT_GROWTH_PENALTY -
 		centerDistance * CENTER_DISTANCE_PENALTY
 	);
 }
@@ -877,6 +890,11 @@ function finalizeLayout(
 
 /**
  * Score antar attempt.
+ *
+ * Height dipenalti lebih berat daripada width supaya layout yang
+ * lebih lebar (cocok untuk kertas A3 landscape) selalu diprioritaskan
+ * dibanding layout yang bentuknya kotak/tinggi, walau area totalnya
+ * sama.
  */
 function calculateLayoutScore(layout: CrosswordLayout): number {
 	const placedScore = layout.placements.length * 1_000_000;
@@ -885,9 +903,7 @@ function calculateLayoutScore(layout: CrosswordLayout): number {
 
 	const area = layout.width * layout.height;
 
-	const perimeter = layout.width + layout.height;
-
-	return placedScore + intersectionScore - area * 10 - perimeter;
+	return placedScore + intersectionScore - area * 10 - layout.width - layout.height * 3;
 }
 
 /**

@@ -319,7 +319,6 @@ function drawGridSection(
 	boldFont: PDFFont,
 	colors: PdfColors,
 	heading: string,
-	description: string,
 	letterReveal: CrosswordGridLetterReveal,
 	crosswordTitle: string
 ): void {
@@ -589,7 +588,6 @@ export async function generateCrosswordPdfBytes(
 			boldFont,
 			colors,
 			'Kunci Jawaban',
-			'Crossword lengkap dengan jawaban.',
 			'all',
 			crosswordTitle
 		);
@@ -604,7 +602,6 @@ export async function generateCrosswordPdfBytes(
 				boldFont,
 				colors,
 				'TTS Awalan',
-				'Huruf pertama setiap nomor sudah diisi sebagai petunjuk.',
 				'first-letters',
 				crosswordTitle
 			);

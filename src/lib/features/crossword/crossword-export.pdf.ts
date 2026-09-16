@@ -132,49 +132,59 @@ function drawPageFooter(page: PDFPage, font: PDFFont, colors: PdfColors): void {
 }
 
 /**
- * Menggambar judul TTS (jika diisi) sebagai baris kecil di atas heading
- * section (TTS Kosong / Daftar Soal / Kunci Jawaban).
- *
- * Mengembalikan posisi y setelah baris judul terakhir, atau y awal apa
- * adanya jika judul kosong, supaya heading di bawahnya tetap konsisten
- * posisinya baik judul diisi maupun tidak.
+ * Ukuran font untuk header satu baris di setiap halaman. Dibuat kecil
+ * di semua jenis halaman (grid maupun Daftar Soal) supaya ruang yang
+ * kepakai header minimal — sisanya bisa dipakai grid/isi supaya lebih
+ * besar.
  */
-function drawCrosswordTitle(
+const HEADER_FONT_SIZE = 11;
+
+/**
+ * Menggambar satu baris header ringkas: "<heading> | <judul TTS>".
+ *
+ * Kalau judul TTS kosong, cuma heading saja yang digambar (tanpa "|"
+ * menggantung). Ini menggantikan heading besar + description + judul
+ * terpisah yang sebelumnya makan banyak baris — sekarang cuma 1 baris
+ * kecil, supaya sisa halaman semaksimal mungkin dipakai untuk grid
+ * atau daftar soal.
+ *
+ * Mengembalikan posisi y setelah baris header (siap dipakai sebagai
+ * "contentTop" untuk konten di bawahnya).
+ */
+function drawCompactHeaderLine(
 	page: PDFPage,
+	heading: string,
 	crosswordTitle: string,
 	startY: number,
-	fontSize: number,
 	boldFont: PDFFont,
 	colors: PdfColors
 ): number {
 	const trimmedTitle = crosswordTitle.trim();
 
-	if (!trimmedTitle) {
-		return startY;
-	}
+	const headerText = trimmedTitle ? `${heading} | ${trimmedTitle}` : heading;
 
 	const { width } = page.getSize();
 
 	const maxWidth = width - PAGE_MARGIN * 2;
 
-	const titleLines = wrapPdfText(trimmedTitle, boldFont, fontSize, maxWidth);
+	const headerLines = wrapPdfText(headerText, boldFont, HEADER_FONT_SIZE, maxWidth);
 
 	let y = startY;
 
-	for (const line of titleLines) {
+	for (const line of headerLines) {
 		page.drawText(line, {
 			x: PAGE_MARGIN,
 
 			y,
 
-			size: fontSize,
+			size: HEADER_FONT_SIZE,
 
 			font: boldFont,
 
-			color: colors.muted
+			color: colors.black
 		});
 
-		y -= fontSize + 5;
+		y -= HEADER_FONT_SIZE + 4;
 	}
 
 	return y - 4;
@@ -319,7 +329,6 @@ function drawGridSection(
 	boldFont: PDFFont,
 	colors: PdfColors,
 	heading: string,
-	description: string,
 	letterReveal: CrosswordGridLetterReveal,
 	crosswordTitle: string
 ): void {
@@ -327,37 +336,14 @@ function drawGridSection(
 
 	const { height } = page.getSize();
 
-	let y = height - PAGE_MARGIN;
-
-	y = drawCrosswordTitle(page, crosswordTitle, y, 13, boldFont, colors);
-
-	page.drawText(heading, {
-		x: PAGE_MARGIN,
-
-		y,
-
-		size: 18,
-
-		font: boldFont,
-
-		color: colors.black
-	});
-
-	y -= 20;
-
-	page.drawText(description, {
-		x: PAGE_MARGIN,
-
-		y,
-
-		size: 9,
-
-		font,
-
-		color: colors.muted
-	});
-
-	y -= 16;
+	const y = drawCompactHeaderLine(
+		page,
+		heading,
+		crosswordTitle,
+		height - PAGE_MARGIN,
+		boldFont,
+		colors
+	);
 
 	drawCrosswordGrid(page, layout, boldFont, colors, letterReveal, y);
 
@@ -389,21 +375,9 @@ function drawQuestionPages(
 	let y = page.getHeight() - PAGE_MARGIN;
 
 	function drawHeader(continued = false): void {
-		y = drawCrosswordTitle(page, crosswordTitle, y, 11, boldFont, colors);
+		const heading = continued ? 'Daftar Soal - Lanjutan' : 'Daftar Soal';
 
-		page.drawText(continued ? 'Daftar Soal - Lanjutan' : 'Daftar Soal', {
-			x: PAGE_MARGIN,
-
-			y,
-
-			size: 18,
-
-			font: boldFont,
-
-			color: colors.black
-		});
-
-		y -= 28;
+		y = drawCompactHeaderLine(page, heading, crosswordTitle, y, boldFont, colors);
 	}
 
 	drawHeader();
@@ -563,7 +537,7 @@ export async function generateCrosswordPdfBytes(
 		border: rgb(0.5, 0.5, 0.5)
 	};
 
-	const drawBlankGrid = (description: string): void => {
+	const drawBlankGrid = (): void => {
 		drawGridSection(
 			pdfDocument,
 			layout,
@@ -571,7 +545,6 @@ export async function generateCrosswordPdfBytes(
 			boldFont,
 			colors,
 			'TTS Kosong',
-			description,
 			'none',
 			crosswordTitle
 		);
@@ -589,7 +562,6 @@ export async function generateCrosswordPdfBytes(
 			boldFont,
 			colors,
 			'Kunci Jawaban',
-			'Crossword lengkap dengan jawaban.',
 			'all',
 			crosswordTitle
 		);
@@ -604,7 +576,6 @@ export async function generateCrosswordPdfBytes(
 				boldFont,
 				colors,
 				'TTS Awalan',
-				'Huruf pertama setiap nomor sudah diisi sebagai petunjuk.',
 				'first-letters',
 				crosswordTitle
 			);
@@ -613,7 +584,7 @@ export async function generateCrosswordPdfBytes(
 		}
 
 		case 'puzzle-only': {
-			drawBlankGrid('Kotak kosong untuk diisi jawaban teka-teki silang.');
+			drawBlankGrid();
 
 			break;
 		}
@@ -631,7 +602,7 @@ export async function generateCrosswordPdfBytes(
 		}
 
 		case 'puzzle-and-questions': {
-			drawBlankGrid('Isi kotak berdasarkan daftar soal pada halaman berikutnya.');
+			drawBlankGrid();
 
 			drawQuestions();
 
@@ -639,7 +610,7 @@ export async function generateCrosswordPdfBytes(
 		}
 
 		case 'complete': {
-			drawBlankGrid('Isi kotak berdasarkan daftar soal pada halaman berikutnya.');
+			drawBlankGrid();
 
 			drawQuestions();
 
