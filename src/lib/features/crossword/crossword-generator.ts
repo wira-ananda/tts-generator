@@ -100,9 +100,17 @@ const INTERSECTION_SCORE = 10_000;
  * (intersection count-nya sama), generator lebih milih yang
  * memperlebar.
  */
-const WIDTH_GROWTH_PENALTY = 10;
+const WIDTH_GROWTH_PENALTY = 5;
 
-const HEIGHT_GROWTH_PENALTY = 35;
+// TTS dicetak A3 landscape. Batasi tinggi agar generator tidak membuat
+// bentuk menjulang seperti gambar kedua. Jika lebih tinggi dari ini,
+// kandidat akan diturunkan nilainya keras.
+const MAX_GRID_HEIGHT = 42;
+
+// Lebar diperbolehkan lebih besar karena area kertas horizontal lebih luas.
+const MAX_GRID_WIDTH = 120;
+
+const HEIGHT_GROWTH_PENALTY = 250;
 
 const CENTER_DISTANCE_PENALTY = 2;
 
@@ -344,10 +352,16 @@ function calculateCandidateScore(
 
 	const centerDistance = Math.abs(centerX) + Math.abs(centerY);
 
+	const overflowHeight = Math.max(0, nextHeight - MAX_GRID_HEIGHT);
+
+	const overflowWidth = Math.max(0, nextWidth - MAX_GRID_WIDTH);
+
 	return (
 		intersections * INTERSECTION_SCORE -
 		widthGrowth * WIDTH_GROWTH_PENALTY -
 		heightGrowth * HEIGHT_GROWTH_PENALTY -
+		overflowHeight * 10000 -
+		overflowWidth * 1000 -
 		centerDistance * CENTER_DISTANCE_PENALTY
 	);
 }
