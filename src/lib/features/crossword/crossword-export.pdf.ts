@@ -29,7 +29,9 @@ const A4_PORTRAIT: [number, number] = [595.28, 841.89];
  */
 const A3_LANDSCAPE: [number, number] = [1190.55, 841.89];
 
-const PAGE_MARGIN = 44;
+const TOP_MARGIN = 25;
+const SIDE_MARGIN = 15;
+const BOTTOM_MARGIN = 15;
 
 /**
  * Ukuran cell maksimum. Dinaikkan supaya kotak lebih besar dan lebih
@@ -46,13 +48,13 @@ const MAX_CELL_SIZE = 32;
  * ada jarak aman — bukan cuma nggak numpuk secara matematis, tapi
  * benar-benar ada spasi kosong di antara keduanya secara visual.
  */
-const NUMBER_ZONE_HEIGHT_RATIO = 0.32;
+const NUMBER_ZONE_HEIGHT_RATIO = 0.38;
 
 const NUMBER_ZONE_FILL_RATIO = 0.72;
 
 const ZONE_GAP_RATIO = 0.03;
 
-const MAX_NUMBER_FONT_SIZE = 8;
+const MAX_NUMBER_FONT_SIZE = 16;
 
 /**
  * Floor ini cuma jaring pengaman supaya font size nggak pernah 0/minus
@@ -69,7 +71,6 @@ const LETTER_ZONE_FONT_RATIO = 0.72;
 /**
  * Ruang vertikal yang disisakan di bagian bawah grid page untuk footer.
  */
-const FOOTER_RESERVED_HEIGHT = 40;
 
 type PdfColors = {
 	black: Color;
@@ -124,9 +125,9 @@ function drawPageFooter(page: PDFPage, font: PDFFont, colors: PdfColors): void {
 
 	// Dipindahkan ke pojok kanan atas agar tidak mengambil area grid.
 	page.drawText(text, {
-		x: width - PAGE_MARGIN - textWidth,
+		x: width - SIDE_MARGIN - textWidth,
 
-		y: height - PAGE_MARGIN + 4,
+		y: height - TOP_MARGIN + 4,
 
 		size: 8,
 
@@ -170,7 +171,7 @@ function drawCompactHeaderLine(
 
 	const { width } = page.getSize();
 
-	const maxWidth = width - PAGE_MARGIN * 2;
+	const maxWidth = width - SIDE_MARGIN * 2;
 
 	const headerLines = wrapPdfText(headerText, boldFont, HEADER_FONT_SIZE, maxWidth);
 
@@ -178,7 +179,7 @@ function drawCompactHeaderLine(
 
 	for (const line of headerLines) {
 		page.drawText(line, {
-			x: PAGE_MARGIN,
+			x: SIDE_MARGIN,
 
 			y,
 
@@ -213,9 +214,9 @@ function drawCrosswordGrid(
 ): void {
 	const { width: pageWidth } = page.getSize();
 
-	const availableWidth = pageWidth - PAGE_MARGIN * 2;
+	const availableWidth = pageWidth - SIDE_MARGIN * 2;
 
-	const availableHeight = contentTop - FOOTER_RESERVED_HEIGHT;
+	const availableHeight = contentTop - BOTTOM_MARGIN;
 
 	const cellSize = Math.min(
 		MAX_CELL_SIZE,
@@ -229,9 +230,9 @@ function drawCrosswordGrid(
 
 	const gridHeight = layout.height * cellSize;
 
-	const startX = (pageWidth - gridWidth) / 2;
+	const startX = SIDE_MARGIN;
 
-	const startY = FOOTER_RESERVED_HEIGHT + (availableHeight - gridHeight) / 2;
+	const startY = BOTTOM_MARGIN;
 
 	const numberZoneHeight = cellSize * NUMBER_ZONE_HEIGHT_RATIO;
 
@@ -345,7 +346,7 @@ function drawGridSection(
 		page,
 		heading,
 		crosswordTitle,
-		height - PAGE_MARGIN,
+		height - TOP_MARGIN,
 		boldFont,
 		colors
 	);
@@ -377,7 +378,7 @@ function drawQuestionPages(
 
 	let page = pdfDocument.addPage(A4_PORTRAIT);
 
-	let y = page.getHeight() - PAGE_MARGIN;
+	let y = page.getHeight() - TOP_MARGIN;
 
 	function drawHeader(continued = false): void {
 		const heading = continued ? 'Daftar Soal - Lanjutan' : 'Daftar Soal';
@@ -394,7 +395,7 @@ function drawQuestionPages(
 
 		const text = `${number}. ${entry.clue.trim()} (${directionLabel})`;
 
-		const lines = wrapPdfText(text, font, 10, page.getWidth() - PAGE_MARGIN * 2);
+		const lines = wrapPdfText(text, font, 10, page.getWidth() - SIDE_MARGIN * 2);
 
 		const requiredHeight = lines.length * 14 + 8;
 
@@ -403,14 +404,14 @@ function drawQuestionPages(
 
 			page = pdfDocument.addPage(A4_PORTRAIT);
 
-			y = page.getHeight() - PAGE_MARGIN;
+			y = page.getHeight() - TOP_MARGIN;
 
 			drawHeader(true);
 		}
 
 		for (const line of lines) {
 			page.drawText(line, {
-				x: PAGE_MARGIN,
+				x: SIDE_MARGIN,
 
 				y,
 
