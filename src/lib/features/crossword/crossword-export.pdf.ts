@@ -230,7 +230,7 @@ function drawCrosswordGrid(
 
 	const gridHeight = layout.height * cellSize;
 
-	const startX = SIDE_MARGIN;
+	const startX = Math.max(SIDE_MARGIN, (pageWidth - gridWidth) / 2);
 
 	const startY = BOTTOM_MARGIN;
 
