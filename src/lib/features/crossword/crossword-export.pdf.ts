@@ -305,8 +305,39 @@ function drawCrosswordGrid(
 		 * nomor) — itu satu-satunya cell yang huruf pertamanya jadi
 		 * petunjuk. Cell lain tetap kosong seperti TTS Kosong biasa.
 		 */
+		/*
+		 * Mode TTS Awalan:
+		 *
+		 * Jawaban normal tetap mendapatkan huruf pertama.
+		 * Khusus jawaban 2 huruf, jika huruf kedua sudah terbuka
+		 * karena intersection dengan jawaban lain, huruf pertama
+		 * tidak ditampilkan agar jawaban tidak langsung terbaca.
+		 */
+		const placement = layout.placements.find((item) => {
+			return item.x === cell.x && item.y === cell.y;
+		});
+
+		const isTwoLetterAnswer = placement?.answer.length === 2;
+
+		const hasSecondLetterIntersection = (() => {
+			if (!isTwoLetterAnswer || !placement) {
+				return false;
+			}
+
+			const secondCellX = placement.direction === 'across' ? placement.x + 1 : placement.x;
+
+			const secondCellY = placement.direction === 'down' ? placement.y + 1 : placement.y;
+
+			const secondCell = layout.cells.find(
+				(item) => item.x === secondCellX && item.y === secondCellY
+			);
+
+			return Boolean(secondCell?.acrossEntryId && secondCell?.downEntryId);
+		})();
+
 		const shouldRevealLetter =
-			letterReveal === 'all' || (letterReveal === 'first-letters' && isStartingCell);
+			letterReveal === 'all' ||
+			(letterReveal === 'first-letters' && isStartingCell && !hasSecondLetterIntersection);
 
 		if (!shouldRevealLetter) {
 			continue;
