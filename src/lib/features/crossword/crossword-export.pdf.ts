@@ -74,6 +74,8 @@ const LETTER_ZONE_FONT_RATIO = 0.72;
 
 type PdfColors = {
 	black: Color;
+	white: Color;
+	yellow: Color;
 	muted: Color;
 	border: Color;
 };
@@ -215,29 +217,22 @@ function drawCrosswordGrid(
 	const { width: pageWidth } = page.getSize();
 
 	const availableWidth = pageWidth - SIDE_MARGIN * 2;
-
 	const availableHeight = contentTop - BOTTOM_MARGIN;
 
 	const cellSize = Math.min(
 		MAX_CELL_SIZE,
-
 		availableWidth / layout.width,
-
 		availableHeight / layout.height
 	);
 
 	const gridWidth = layout.width * cellSize;
-
 	const gridHeight = layout.height * cellSize;
 
 	const startX = Math.max(SIDE_MARGIN, (pageWidth - gridWidth) / 2);
-
 	const startY = BOTTOM_MARGIN;
 
 	const numberZoneHeight = cellSize * NUMBER_ZONE_HEIGHT_RATIO;
-
 	const zoneGap = Math.max(1, cellSize * ZONE_GAP_RATIO);
-
 	const letterZoneHeight = cellSize - numberZoneHeight - zoneGap;
 
 	const baseNumberFontSize = Math.min(
@@ -247,115 +242,81 @@ function drawCrosswordGrid(
 
 	const letterFontSize = Math.min(MAX_LETTER_FONT_SIZE, letterZoneHeight * LETTER_ZONE_FONT_RATIO);
 
-	for (const cell of layout.cells) {
-		const x = startX + cell.x * cellSize;
+	const cellMap = new Map(layout.cells.map((cell) => [`${cell.x}-${cell.y}`, cell]));
 
-		const y = startY + gridHeight - (cell.y + 1) * cellSize;
+	// Render seluruh area grid agar cell kosong menjadi block hitam
+	for (let row = 0; row < layout.height; row++) {
+		for (let column = 0; column < layout.width; column++) {
+			const x = startX + column * cellSize;
+			const y = startY + gridHeight - (row + 1) * cellSize;
 
-		page.drawRectangle({
-			x,
-			y,
+			const cell = cellMap.get(`${column}-${row}`);
 
-			width: cellSize,
+			if (!cell) {
+				page.drawRectangle({
+					x,
+					y,
+					width: cellSize,
+					height: cellSize,
+					color: colors.black
+				});
 
-			height: cellSize,
-
-			borderWidth: 0.7,
-
-			borderColor: colors.black
-		});
-
-		const isStartingCell = Boolean(cell.numbers && cell.numbers.length > 0);
-
-		if (isStartingCell) {
-			const numberText = cell.numbers!.join('/');
-
-			/**
-			 * Cell dengan lebih dari satu nomor (mis. "45/78") bisa lebih
-			 * lebar dari cell-nya sendiri di font size normal — kecilkan
-			 * bertahap sampai muat, supaya tidak meluber ke cell sebelah
-			 * atau ke area huruf.
-			 */
-			let numberFontSize = baseNumberFontSize;
-
-			const maxNumberWidth = cellSize - 4;
-
-			while (
-				numberFontSize > MIN_NUMBER_FONT_SIZE &&
-				boldFont.widthOfTextAtSize(numberText, numberFontSize) > maxNumberWidth
-			) {
-				numberFontSize -= 0.5;
+				continue;
 			}
 
-			page.drawText(numberText, {
-				x: x + 2,
+			const isStartingCell = Boolean(cell.numbers && cell.numbers.length > 0);
 
-				y: y + cellSize - numberFontSize - 1,
+			const isYellowHint = letterReveal === 'first-letters' && isStartingCell;
 
-				size: numberFontSize,
+			page.drawRectangle({
+				x,
+				y,
+				width: cellSize,
+				height: cellSize,
+				color: isYellowHint ? colors.yellow : colors.white,
+				borderWidth: 0.7,
+				borderColor: colors.black
+			});
 
+			if (isStartingCell) {
+				const numberText = cell.numbers!.join('/');
+
+				let numberFontSize = baseNumberFontSize;
+				const maxNumberWidth = cellSize - 4;
+
+				while (
+					numberFontSize > MIN_NUMBER_FONT_SIZE &&
+					boldFont.widthOfTextAtSize(numberText, numberFontSize) > maxNumberWidth
+				) {
+					numberFontSize -= 0.5;
+				}
+
+				page.drawText(numberText, {
+					x: x + 2,
+					y: y + cellSize - numberFontSize - 1,
+					size: numberFontSize,
+					font: boldFont,
+					color: colors.black
+				});
+			}
+
+			const shouldRevealLetter =
+				letterReveal === 'all' || (letterReveal === 'first-letters' && isStartingCell);
+
+			if (!shouldRevealLetter) {
+				continue;
+			}
+
+			const letterWidth = boldFont.widthOfTextAtSize(cell.letter, letterFontSize);
+
+			page.drawText(cell.letter, {
+				x: x + (cellSize - letterWidth) / 2,
+				y: y + (cellSize - letterFontSize) / 2,
+				size: letterFontSize,
 				font: boldFont,
-
 				color: colors.black
 			});
 		}
-
-		/**
-		 * 'first-letters' hanya mengisi starting cell (cell yang punya
-		 * nomor) — itu satu-satunya cell yang huruf pertamanya jadi
-		 * petunjuk. Cell lain tetap kosong seperti TTS Kosong biasa.
-		 */
-		/*
-		 * Mode TTS Awalan:
-		 *
-		 * Jawaban normal tetap mendapatkan huruf pertama.
-		 * Khusus jawaban 2 huruf, jika huruf kedua sudah terbuka
-		 * karena intersection dengan jawaban lain, huruf pertama
-		 * tidak ditampilkan agar jawaban tidak langsung terbaca.
-		 */
-		const placement = layout.placements.find((item) => {
-			return item.x === cell.x && item.y === cell.y;
-		});
-
-		const isTwoLetterAnswer = placement?.answer.length === 2;
-
-		const hasSecondLetterIntersection = (() => {
-			if (!isTwoLetterAnswer || !placement) {
-				return false;
-			}
-
-			const secondCellX = placement.direction === 'across' ? placement.x + 1 : placement.x;
-
-			const secondCellY = placement.direction === 'down' ? placement.y + 1 : placement.y;
-
-			const secondCell = layout.cells.find(
-				(item) => item.x === secondCellX && item.y === secondCellY
-			);
-
-			return Boolean(secondCell?.acrossEntryId && secondCell?.downEntryId);
-		})();
-
-		const shouldRevealLetter =
-			letterReveal === 'all' ||
-			(letterReveal === 'first-letters' && isStartingCell && !hasSecondLetterIntersection);
-
-		if (!shouldRevealLetter) {
-			continue;
-		}
-
-		const letterWidth = boldFont.widthOfTextAtSize(cell.letter, letterFontSize);
-
-		page.drawText(cell.letter, {
-			x: x + (cellSize - letterWidth) / 2,
-
-			y: y + (letterZoneHeight - letterFontSize * 0.72) / 2,
-
-			size: letterFontSize,
-
-			font: boldFont,
-
-			color: colors.black
-		});
 	}
 }
 
@@ -419,18 +380,20 @@ function drawQuestionPages(
 
 	drawHeader();
 
-	for (const { entry, number } of activeEntries) {
-		const direction = directionByEntryId.get(entry.id);
+	const groupedEntries = {
+		across: activeEntries.filter(({ entry }) => directionByEntryId.get(entry.id) === 'across'),
+		down: activeEntries.filter(({ entry }) => directionByEntryId.get(entry.id) === 'down')
+	};
 
-		const directionLabel = direction === 'across' ? 'Mendatar' : 'Menurun';
+	for (const [direction, title] of [
+		['across', 'MENDATAR'],
+		['down', 'MENURUN']
+	] as const) {
+		const sectionEntries = groupedEntries[direction];
 
-		const text = `${number}. ${entry.clue.trim()} (${directionLabel})`;
+		if (sectionEntries.length === 0) continue;
 
-		const lines = wrapPdfText(text, font, 10, page.getWidth() - SIDE_MARGIN * 2);
-
-		const requiredHeight = lines.length * 14 + 8;
-
-		if (y - requiredHeight < 40) {
+		if (y - 30 < 40) {
 			drawPageFooter(page, font, colors);
 
 			page = pdfDocument.addPage(A4_PORTRAIT);
@@ -440,23 +403,58 @@ function drawQuestionPages(
 			drawHeader(true);
 		}
 
-		for (const line of lines) {
-			page.drawText(line, {
-				x: SIDE_MARGIN,
+		page.drawText(title, {
+			x: SIDE_MARGIN,
 
-				y,
+			y,
 
-				size: 10,
+			size: 12,
 
-				font,
+			font: boldFont,
 
-				color: colors.black
-			});
+			color: colors.black
+		});
 
-			y -= 14;
+		y -= 22;
+
+		for (const { entry, number } of sectionEntries) {
+			const text = `${number}. ${entry.clue.trim()}`;
+
+			const lines = wrapPdfText(text, boldFont, 10, page.getWidth() - SIDE_MARGIN * 2);
+
+			const requiredHeight = lines.length * 14 + 8;
+
+			if (y - requiredHeight < 40) {
+				drawPageFooter(page, font, colors);
+
+				page = pdfDocument.addPage(A4_PORTRAIT);
+
+				y = page.getHeight() - TOP_MARGIN;
+
+				drawHeader(true);
+			}
+
+			for (const line of lines) {
+				page.drawText(line, {
+					x: SIDE_MARGIN,
+
+					y,
+
+					size: 10,
+
+					font: boldFont,
+
+					color: colors.black
+				});
+
+				y -= 14;
+			}
+
+			y -= 5;
 		}
 
-		y -= 5;
+		// Jarak antar section agar MENDATAR dan MENURUN tidak terlalu rapat.
+		y -= 28;
 	}
 
 	drawPageFooter(page, font, colors);
@@ -568,6 +566,10 @@ export async function generateCrosswordPdfBytes(
 
 	const colors: PdfColors = {
 		black: rgb(0, 0, 0),
+
+		white: rgb(1, 1, 1),
+
+		yellow: rgb(1, 1, 0),
 
 		muted: rgb(0.35, 0.35, 0.35),
 
