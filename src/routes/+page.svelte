@@ -193,11 +193,11 @@
 
 	function scheduleCrosswordGeneration(
 		nextEntries: CrosswordEntry[],
-		delay = CROSSWORD_GENERATION_DELAY_MS
+		delay = CROSSWORD_GENERATION_DELAY_MS,
+		layoutModeOverride?: 'landscape' | 'portrait'
 	): void {
 		if (generationTimer) {
 			clearTimeout(generationTimer);
-
 			generationTimer = undefined;
 		}
 
@@ -219,17 +219,22 @@
 
 		generationTimer = setTimeout(() => {
 			try {
+				const shouldUsePortraitLayout =
+					layoutModeOverride === 'portrait' ||
+					(layoutModeOverride !== 'landscape' &&
+						(pdfMode === 'complete-part-2' ||
+							pdfMode === 'complete-part-3' ||
+							pdfMode === 'questions-only-a3'));
+
 				const nextLayout = buildCrosswordLayout(entriesSnapshot, {
-					attempts: CROSSWORD_LIVE_ATTEMPTS
+					attempts: CROSSWORD_LIVE_ATTEMPTS,
+					layoutMode: shouldUsePortraitLayout ? 'portrait' : 'landscape'
 				});
 
 				if (requestId !== generationRequestId) {
 					return;
 				}
 
-				/**
-				 * Atomic preview update.
-				 */
 				layout = nextLayout;
 			} catch (error) {
 				if (requestId === generationRequestId) {
@@ -238,7 +243,6 @@
 			} finally {
 				if (requestId === generationRequestId) {
 					isGenerating = false;
-
 					generationTimer = undefined;
 				}
 			}
@@ -275,6 +279,13 @@
 
 	function handlePdfModeChange(nextMode: CrosswordPdfMode): void {
 		pdfMode = nextMode;
+
+		const isPortraitMode =
+			nextMode === 'complete-part-2' ||
+			nextMode === 'complete-part-3' ||
+			nextMode === 'questions-only-a3';
+
+		scheduleCrosswordGeneration(entries, 0, isPortraitMode ? 'portrait' : 'landscape');
 	}
 
 	function saveCurrentSnapshot(label: string): void {

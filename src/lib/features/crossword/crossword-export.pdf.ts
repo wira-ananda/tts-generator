@@ -331,9 +331,10 @@ function drawGridSection(
 	colors: PdfColors,
 	heading: string,
 	letterReveal: CrosswordGridLetterReveal,
-	crosswordTitle: string
+	crosswordTitle: string,
+	pageSize: [number, number] = A3_LANDSCAPE
 ): void {
-	const page = pdfDocument.addPage(A3_LANDSCAPE);
+	const page = pdfDocument.addPage(pageSize);
 
 	const { height } = page.getSize();
 
@@ -697,7 +698,7 @@ export async function generateCrosswordPdfBytes(
 		border: rgb(0.5, 0.5, 0.5)
 	};
 
-	const drawBlankGrid = (): void => {
+	const drawBlankGrid = (pageSize: [number, number] = A3_LANDSCAPE): void => {
 		drawGridSection(
 			pdfDocument,
 			layout,
@@ -706,7 +707,8 @@ export async function generateCrosswordPdfBytes(
 			colors,
 			'TTS Kosong',
 			'none',
-			crosswordTitle
+			crosswordTitle,
+			pageSize
 		);
 	};
 
@@ -718,7 +720,7 @@ export async function generateCrosswordPdfBytes(
 		drawQuestionPagesA3(pdfDocument, entries, layout, font, boldFont, colors, crosswordTitle);
 	};
 
-	const drawAnswerKey = (): void => {
+	const drawAnswerKey = (pageSize: [number, number] = A3_LANDSCAPE): void => {
 		drawGridSection(
 			pdfDocument,
 			layout,
@@ -727,7 +729,8 @@ export async function generateCrosswordPdfBytes(
 			colors,
 			'Kunci Jawaban',
 			'all',
-			crosswordTitle
+			crosswordTitle,
+			pageSize
 		);
 	};
 
@@ -798,7 +801,8 @@ export async function generateCrosswordPdfBytes(
 				colors,
 				'TTS Awalan',
 				'first-letters',
-				crosswordTitle
+				crosswordTitle,
+				A3_PORTRAIT
 			);
 
 			drawQuestionsA3();
@@ -815,12 +819,13 @@ export async function generateCrosswordPdfBytes(
 				colors,
 				'TTS Awalan',
 				'first-letters',
-				crosswordTitle
+				crosswordTitle,
+				A3_PORTRAIT
 			);
 
 			drawQuestionsA3();
 
-			drawBlankGrid();
+			drawBlankGrid(A3_PORTRAIT);
 
 			break;
 		}

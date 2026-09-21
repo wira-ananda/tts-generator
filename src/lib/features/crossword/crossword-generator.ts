@@ -78,6 +78,8 @@ type AttemptResult = {
 	score: number;
 };
 
+type CrosswordLayoutMode = 'landscape' | 'portrait';
+
 type PreparedEntriesResult = {
 	entries: PreparedEntry[];
 
@@ -100,15 +102,29 @@ const INTERSECTION_SCORE = 10_000;
  * (intersection count-nya sama), generator lebih milih yang
  * memperlebar.
  */
-const WIDTH_GROWTH_PENALTY = 180;
+const DEFAULT_LAYOUT_CONFIG = {
+	widthGrowthPenalty: 180,
+	heightGrowthPenalty: 120,
+	maxGridHeight: 85,
+	maxGridWidth: 105,
+	targetRatio: 1.414
+} as const;
 
-const MAX_GRID_HEIGHT = 85;
-
-const MAX_GRID_WIDTH = 105;
-
-const HEIGHT_GROWTH_PENALTY = 120;
+/**
+ * Konfigurasi portrait untuk output A3+ portrait.
+ * Lebar tetap dikontrol, tetapi pertumbuhan tinggi lebih disukai.
+ */
+const PORTRAIT_LAYOUT_CONFIG = {
+	widthGrowthPenalty: 320,
+	heightGrowthPenalty: 35,
+	maxGridHeight: 120,
+	maxGridWidth: 85,
+	targetRatio: 0.707
+} as const;
 
 const CENTER_DISTANCE_PENALTY = 2;
+
+let activeLayoutConfig = DEFAULT_LAYOUT_CONFIG;
 
 /**
  * Sparse coordinate key.
@@ -348,20 +364,20 @@ function calculateCandidateScore(
 
 	const centerDistance = Math.abs(centerX) + Math.abs(centerY);
 
-	const overflowHeight = Math.max(0, nextHeight - MAX_GRID_HEIGHT);
+	const overflowHeight = Math.max(0, nextHeight - activeLayoutConfig.maxGridHeight);
 
-	const overflowWidth = Math.max(0, nextWidth - MAX_GRID_WIDTH);
+	const overflowWidth = Math.max(0, nextWidth - activeLayoutConfig.maxGridWidth);
 
 	const targetRatio = 1.414;
 
 	const currentRatio = nextWidth / nextHeight;
 
-	const aspectRatioPenalty = Math.abs(currentRatio - targetRatio) * 5000;
+	const aspectRatioPenalty = Math.abs(currentRatio - activeLayoutConfig.targetRatio) * 5000;
 
 	return (
 		intersections * INTERSECTION_SCORE -
-		widthGrowth * WIDTH_GROWTH_PENALTY -
-		heightGrowth * HEIGHT_GROWTH_PENALTY -
+		widthGrowth * activeLayoutConfig.widthGrowthPenalty -
+		heightGrowth * activeLayoutConfig.heightGrowthPenalty -
 		overflowHeight * 10000 -
 		overflowWidth * 10000 -
 		aspectRatioPenalty -
@@ -924,7 +940,7 @@ function calculateLayoutScore(layout: CrosswordLayout): number {
 
 	const currentRatio = layout.width / layout.height;
 
-	const aspectRatioPenalty = Math.abs(currentRatio - targetRatio) * 5000;
+	const aspectRatioPenalty = Math.abs(currentRatio - activeLayoutConfig.targetRatio) * 5000;
 
 	return (
 		placedScore + intersectionScore - area * 10 - aspectRatioPenalty - layout.width - layout.height
@@ -954,8 +970,13 @@ function sortUnplacedEntries(
  */
 export function buildCrosswordLayout(
 	entries: CrosswordEntry[],
-	options: CrosswordGeneratorOptions = {}
+	options: CrosswordGeneratorOptions & {
+		layoutMode?: CrosswordLayoutMode;
+	} = {}
 ): CrosswordLayout {
+	activeLayoutConfig =
+		options.layoutMode === 'portrait' ? PORTRAIT_LAYOUT_CONFIG : DEFAULT_LAYOUT_CONFIG;
+
 	const {
 		entries: preparedEntries,
 
