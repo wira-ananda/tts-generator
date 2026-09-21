@@ -100,17 +100,13 @@ const INTERSECTION_SCORE = 10_000;
  * (intersection count-nya sama), generator lebih milih yang
  * memperlebar.
  */
-const WIDTH_GROWTH_PENALTY = 5;
+const WIDTH_GROWTH_PENALTY = 180;
 
-// TTS dicetak A3 landscape. Batasi tinggi agar generator tidak membuat
-// bentuk menjulang seperti gambar kedua. Jika lebih tinggi dari ini,
-// kandidat akan diturunkan nilainya keras.
-const MAX_GRID_HEIGHT = 42;
+const MAX_GRID_HEIGHT = 85;
 
-// Lebar diperbolehkan lebih besar karena area kertas horizontal lebih luas.
-const MAX_GRID_WIDTH = 120;
+const MAX_GRID_WIDTH = 105;
 
-const HEIGHT_GROWTH_PENALTY = 250;
+const HEIGHT_GROWTH_PENALTY = 120;
 
 const CENTER_DISTANCE_PENALTY = 2;
 
@@ -356,12 +352,19 @@ function calculateCandidateScore(
 
 	const overflowWidth = Math.max(0, nextWidth - MAX_GRID_WIDTH);
 
+	const targetRatio = 1.414;
+
+	const currentRatio = nextWidth / nextHeight;
+
+	const aspectRatioPenalty = Math.abs(currentRatio - targetRatio) * 5000;
+
 	return (
 		intersections * INTERSECTION_SCORE -
 		widthGrowth * WIDTH_GROWTH_PENALTY -
 		heightGrowth * HEIGHT_GROWTH_PENALTY -
 		overflowHeight * 10000 -
-		overflowWidth * 1000 -
+		overflowWidth * 10000 -
+		aspectRatioPenalty -
 		centerDistance * CENTER_DISTANCE_PENALTY
 	);
 }
@@ -917,7 +920,15 @@ function calculateLayoutScore(layout: CrosswordLayout): number {
 
 	const area = layout.width * layout.height;
 
-	return placedScore + intersectionScore - area * 10 - layout.width - layout.height * 3;
+	const targetRatio = 1.414;
+
+	const currentRatio = layout.width / layout.height;
+
+	const aspectRatioPenalty = Math.abs(currentRatio - targetRatio) * 5000;
+
+	return (
+		placedScore + intersectionScore - area * 10 - aspectRatioPenalty - layout.width - layout.height
+	);
 }
 
 /**
