@@ -9,7 +9,9 @@ export type CrosswordPdfMode =
 	| 'answer-key-only'
 	| 'questions-only-a3'
 	| 'complete-part-2'
-	| 'complete-part-3';
+	| 'complete-part-3'
+	| 'puzzle-and-questions-a3'
+	| 'puzzle-first-letters-a3';
 
 export type CrosswordDownloadState = 'never' | 'downloaded' | 'stale';
 

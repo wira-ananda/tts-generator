@@ -220,11 +220,11 @@
 		generationTimer = setTimeout(() => {
 			try {
 				const shouldUsePortraitLayout =
-					layoutModeOverride === 'portrait' ||
-					(layoutModeOverride !== 'landscape' &&
-						(pdfMode === 'complete-part-2' ||
-							pdfMode === 'complete-part-3' ||
-							pdfMode === 'questions-only-a3'));
+					pdfMode === 'complete-part-2' ||
+					pdfMode === 'complete-part-3' ||
+					pdfMode === 'questions-only-a3' ||
+					pdfMode === 'puzzle-and-questions-a3' ||
+					pdfMode === 'puzzle-first-letters-a3';
 
 				const nextLayout = buildCrosswordLayout(entriesSnapshot, {
 					attempts: CROSSWORD_LIVE_ATTEMPTS,
@@ -283,7 +283,9 @@
 		const isPortraitMode =
 			nextMode === 'complete-part-2' ||
 			nextMode === 'complete-part-3' ||
-			nextMode === 'questions-only-a3';
+			nextMode === 'questions-only-a3' ||
+			nextMode === 'puzzle-and-questions-a3' ||
+			nextMode === 'puzzle-first-letters-a3';
 
 		scheduleCrosswordGeneration(entries, 0, isPortraitMode ? 'portrait' : 'landscape');
 	}

@@ -222,6 +222,9 @@
 				<option value="questions-only"> Soal saja </option>
 
 				<option value="answer-key-only"> Kunci Jawaban saja </option>
+				<option value="puzzle-and-questions-a3"> Soal + TTS Kosong (A3 Portrait) </option>
+
+				<option value="puzzle-first-letters-a3"> TTS Awalan saja (A3+ Portrait) </option>
 			</select>
 
 			<!-- Complete TTS PDF -->

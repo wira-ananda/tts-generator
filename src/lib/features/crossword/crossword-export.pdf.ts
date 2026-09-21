@@ -603,7 +603,9 @@ const PDF_MODE_FILE_NAME_SUFFIX: Record<CrosswordPdfMode, string> = {
 	'answer-key-only': ' - Kunci Jawaban',
 	'questions-only-a3': ' - Soal A3',
 	'complete-part-2': ' - Lengkap Part 2',
-	'complete-part-3': ' - Lengkap Part 3'
+	'complete-part-3': ' - Lengkap Part 3',
+	'puzzle-and-questions-a3': ' - Soal + TTS Kosong A3',
+	'puzzle-first-letters-a3': ' - TTS Awalan A3+'
 };
 
 const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
@@ -615,7 +617,9 @@ const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
 	'answer-key-only': '-kunci-jawaban',
 	'questions-only-a3': '-soal-a3',
 	'complete-part-2': '-lengkap-part-2',
-	'complete-part-3': '-lengkap-part-3'
+	'complete-part-3': '-lengkap-part-3',
+	'puzzle-and-questions-a3': '-soal-tts-kosong-a3',
+	'puzzle-first-letters-a3': '-tts-awalan-a3-plus'
 };
 
 function createTimestampPdfFileName(mode: CrosswordPdfMode): string {
@@ -826,6 +830,38 @@ export async function generateCrosswordPdfBytes(
 			drawQuestionsA3();
 
 			drawBlankGrid(A3_PORTRAIT);
+
+			break;
+		}
+		case 'puzzle-and-questions-a3': {
+			drawQuestionsA3();
+
+			drawGridSection(
+				pdfDocument,
+				layout,
+				font,
+				boldFont,
+				colors,
+				'TTS Kosong',
+				'none',
+				crosswordTitle,
+				A3_PORTRAIT
+			);
+
+			break;
+		}
+		case 'puzzle-first-letters-a3': {
+			drawGridSection(
+				pdfDocument,
+				layout,
+				font,
+				boldFont,
+				colors,
+				'TTS Awalan',
+				'first-letters',
+				crosswordTitle,
+				A3_PORTRAIT
+			);
 
 			break;
 		}
