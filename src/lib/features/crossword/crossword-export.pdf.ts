@@ -29,6 +29,9 @@ const A4_PORTRAIT: [number, number] = [595.28, 841.89];
  */
 const A3_LANDSCAPE: [number, number] = [1190.55, 841.89];
 
+// Daftar soal versi A3 agar memuat lebih banyak soal dalam satu halaman.
+const A3_PORTRAIT: [number, number] = [841.89, 1190.55];
+
 const TOP_MARGIN = 25;
 const SIDE_MARGIN = 15;
 const BOTTOM_MARGIN = 15;
@@ -460,6 +463,118 @@ function drawQuestionPages(
 	drawPageFooter(page, font, colors);
 }
 
+function drawQuestionPagesA3(
+	pdfDocument: import('pdf-lib').PDFDocument,
+	entries: CrosswordEntry[],
+	layout: CrosswordLayout,
+	font: PDFFont,
+	boldFont: PDFFont,
+	colors: PdfColors,
+	crosswordTitle: string
+): void {
+	const directionByEntryId = new Map(
+		layout.placements.map((placement) => [placement.entryId, placement.direction])
+	);
+
+	const activeEntries = entries
+		.map((entry, index) => ({
+			entry,
+			number: index + 1
+		}))
+		.filter(({ entry }) => normalizeAnswer(entry.answer) !== '');
+
+	let page = pdfDocument.addPage(A3_PORTRAIT);
+
+	let y = page.getHeight() - TOP_MARGIN;
+
+	function drawHeader(continued = false): void {
+		const heading = continued ? 'Daftar Soal - Lanjutan' : 'Daftar Soal';
+
+		y = drawCompactHeaderLine(page, heading, crosswordTitle, y, boldFont, colors);
+	}
+
+	drawHeader();
+
+	const groupedEntries = {
+		across: activeEntries.filter(({ entry }) => directionByEntryId.get(entry.id) === 'across'),
+		down: activeEntries.filter(({ entry }) => directionByEntryId.get(entry.id) === 'down')
+	};
+
+	for (const [direction, title] of [
+		['across', 'MENDATAR'],
+		['down', 'MENURUN']
+	] as const) {
+		const sectionEntries = groupedEntries[direction];
+
+		if (sectionEntries.length === 0) continue;
+
+		if (y - 30 < 40) {
+			drawPageFooter(page, font, colors);
+
+			page = pdfDocument.addPage(A3_PORTRAIT);
+
+			y = page.getHeight() - TOP_MARGIN;
+
+			drawHeader(true);
+		}
+
+		page.drawText(title, {
+			x: SIDE_MARGIN,
+
+			y,
+
+			size: 12,
+
+			font: boldFont,
+
+			color: colors.black
+		});
+
+		y -= 22;
+
+		for (const { entry, number } of sectionEntries) {
+			const text = `${number}. ${entry.clue.trim()}`;
+
+			const lines = wrapPdfText(text, boldFont, 10, page.getWidth() - SIDE_MARGIN * 2);
+
+			const requiredHeight = lines.length * 14 + 8;
+
+			if (y - requiredHeight < 40) {
+				drawPageFooter(page, font, colors);
+
+				page = pdfDocument.addPage(A3_PORTRAIT);
+
+				y = page.getHeight() - TOP_MARGIN;
+
+				drawHeader(true);
+			}
+
+			for (const line of lines) {
+				page.drawText(line, {
+					x: SIDE_MARGIN,
+
+					y,
+
+					size: 10,
+
+					font: boldFont,
+
+					color: colors.black
+				});
+
+				y -= 14;
+			}
+
+			y -= 5;
+		}
+
+		// Jarak antar section agar MENDATAR dan MENURUN tidak terlalu rapat.
+		y -= 28;
+	}
+
+	drawPageFooter(page, font, colors);
+}
+
 /**
  * Membersihkan judul supaya aman dipakai sebagai nama file di berbagai OS.
  */
@@ -484,7 +599,10 @@ const PDF_MODE_FILE_NAME_SUFFIX: Record<CrosswordPdfMode, string> = {
 	'puzzle-only': ' - TTS Kosong',
 	'puzzle-first-letters': ' - TTS Awalan',
 	'questions-only': ' - Soal',
-	'answer-key-only': ' - Kunci Jawaban'
+	'answer-key-only': ' - Kunci Jawaban',
+	'questions-only-a3': ' - Soal A3',
+	'complete-part-2': ' - Lengkap Part 2',
+	'complete-part-3': ' - Lengkap Part 3'
 };
 
 const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
@@ -493,7 +611,10 @@ const PDF_MODE_TIMESTAMP_SUFFIX: Record<CrosswordPdfMode, string> = {
 	'puzzle-only': '-tts-kosong',
 	'puzzle-first-letters': '-tts-awalan',
 	'questions-only': '-soal',
-	'answer-key-only': '-kunci-jawaban'
+	'answer-key-only': '-kunci-jawaban',
+	'questions-only-a3': '-soal-a3',
+	'complete-part-2': '-lengkap-part-2',
+	'complete-part-3': '-lengkap-part-3'
 };
 
 function createTimestampPdfFileName(mode: CrosswordPdfMode): string {
@@ -593,6 +714,10 @@ export async function generateCrosswordPdfBytes(
 		drawQuestionPages(pdfDocument, entries, layout, font, boldFont, colors, crosswordTitle);
 	};
 
+	const drawQuestionsA3 = (): void => {
+		drawQuestionPagesA3(pdfDocument, entries, layout, font, boldFont, colors, crosswordTitle);
+	};
+
 	const drawAnswerKey = (): void => {
 		drawGridSection(
 			pdfDocument,
@@ -654,6 +779,48 @@ export async function generateCrosswordPdfBytes(
 			drawQuestions();
 
 			drawAnswerKey();
+
+			break;
+		}
+
+		case 'questions-only-a3': {
+			drawQuestionsA3();
+
+			break;
+		}
+
+		case 'complete-part-2': {
+			drawGridSection(
+				pdfDocument,
+				layout,
+				font,
+				boldFont,
+				colors,
+				'TTS Awalan',
+				'first-letters',
+				crosswordTitle
+			);
+
+			drawQuestionsA3();
+
+			break;
+		}
+
+		case 'complete-part-3': {
+			drawGridSection(
+				pdfDocument,
+				layout,
+				font,
+				boldFont,
+				colors,
+				'TTS Awalan',
+				'first-letters',
+				crosswordTitle
+			);
+
+			drawQuestionsA3();
+
+			drawBlankGrid();
 
 			break;
 		}

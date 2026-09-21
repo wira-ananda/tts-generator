@@ -204,6 +204,11 @@
 				onchange={handlePdfModeChange}
 			>
 				<option value="complete">PDF Lengkap (TTS + Soal + Kunci)</option>
+				<option value="complete-part-2"> Lengkap Part 2 (TTS Awalan + Soal A3) </option>
+
+				<option value="complete-part-3">
+					Lengkap Part 3 (TTS Awalan + Soal A3 + TTS Kosong)
+				</option>
 
 				<option value="puzzle-and-questions">TTS Kosong + Soal</option>
 
@@ -214,6 +219,7 @@
 				<option value="questions-only">Soal saja</option>
 
 				<option value="answer-key-only">Kunci Jawaban saja</option>
+				<option value="questions-only-a3">Soal saja (A3)</option>
 			</select>
 
 			<!-- Complete TTS PDF -->
