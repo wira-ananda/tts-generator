@@ -34,7 +34,7 @@ const A3_PORTRAIT: [number, number] = [841.89, 1190.55];
 
 const TOP_MARGIN = 25;
 const SIDE_MARGIN = 15;
-const BOTTOM_MARGIN = 15;
+const BOTTOM_MARGIN = 70;
 
 /**
  * Ukuran cell maksimum. Dinaikkan supaya kotak lebih besar dan lebih
