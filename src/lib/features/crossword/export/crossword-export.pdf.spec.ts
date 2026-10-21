@@ -1,13 +1,13 @@
 import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 
-import { generateCrosswordPdfBytes } from '$lib/features/crossword/crossword-export.pdf';
+import { generateCrosswordPdfBytes } from '$lib/features/crossword/export/crossword-export.pdf';
 
-import type { CrosswordPdfMode } from '$lib/features/crossword/crossword-export.types';
+import type { CrosswordPdfMode } from '$lib/features/crossword/export/crossword-export.types';
 
 import { buildCrosswordLayout } from '$lib/features/crossword/crossword-generator';
 
-import { CROSSWORD_PDF_MODES } from '$lib/features/crossword/crossword-pdf-modes';
+import { CROSSWORD_PDF_MODES } from '$lib/features/crossword/export/crossword-pdf-modes';
 
 const entries = ['laravel', 'react', 'svelte', 'vite', 'python'].map((answer, index) => ({
 	id: `entry-${index + 1}`,

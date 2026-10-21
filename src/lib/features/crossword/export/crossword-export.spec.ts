@@ -4,7 +4,7 @@ import {
 	createCrosswordExportSignature,
 	getCrosswordDownloadState,
 	getCrosswordExportReadiness
-} from '$lib/features/crossword/crossword-export';
+} from '$lib/features/crossword/export/crossword-export';
 
 import { buildCrosswordLayout } from '$lib/features/crossword/crossword-generator';
 

@@ -15,7 +15,7 @@
 
 	import CrosswordUnplacedList from '$lib/features/crossword/components/CrosswordUnplacedList.svelte';
 
-	import { downloadCrosswordImage } from '$lib/features/crossword/crossword-image-export';
+	import { downloadCrosswordImage } from '$lib/features/crossword/export/crossword-image-export';
 
 	import type {
 		CrosswordEntry,

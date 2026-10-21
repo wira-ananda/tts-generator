@@ -10,9 +10,9 @@
 	import type {
 		CrosswordDownloadState,
 		CrosswordPdfMode
-	} from '$lib/features/crossword/crossword-export.types';
+	} from '$lib/features/crossword/export/crossword-export.types';
 
-	import { CROSSWORD_PDF_MODE_OPTIONS } from '$lib/features/crossword/crossword-pdf-modes';
+	import { CROSSWORD_PDF_MODE_OPTIONS } from '$lib/features/crossword/export/crossword-pdf-modes';
 
 	import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 

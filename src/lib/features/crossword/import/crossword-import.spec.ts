@@ -5,7 +5,7 @@ import {
 	countTrailingBlankCrosswordEntries,
 	parseCrosswordCsvText,
 	validateCrosswordImport
-} from '$lib/features/crossword/crossword-import';
+} from '$lib/features/crossword/import';
 
 import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 
@@ -231,7 +231,7 @@ describe('crossword import merge', () => {
 		]);
 	});
 });
-import { parseCrosswordWordText } from '$lib/features/crossword/crossword-import';
+import { parseCrosswordWordText } from '$lib/features/crossword/import';
 
 it('parses numbered Word format', () => {
 	const source = parseCrosswordWordText(

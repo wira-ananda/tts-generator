@@ -3,13 +3,13 @@ import type { Color, PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import type {
 	CrosswordPdfMode,
 	CrosswordPdfResult
-} from '$lib/features/crossword/crossword-export.types';
+} from '$lib/features/crossword/export/crossword-export.types';
 
 import {
 	CROSSWORD_PDF_MODES,
 	type CrosswordGridLetterReveal,
 	type CrosswordPdfPageSize
-} from '$lib/features/crossword/crossword-pdf-modes';
+} from '$lib/features/crossword/export/crossword-pdf-modes';
 
 import { MAX_CROSSWORD_TITLE_LENGTH } from '$lib/features/crossword/crossword.constants';
 

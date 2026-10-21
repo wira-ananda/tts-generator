@@ -10,20 +10,20 @@ import {
 	getCrosswordExportReadiness,
 	readCrosswordDownloadMeta,
 	saveCrosswordDownloadMeta
-} from '$lib/features/crossword/crossword-export';
+} from '$lib/features/crossword/export/crossword-export';
 
-import { downloadCrosswordPdf } from '$lib/features/crossword/crossword-export.pdf';
+import { downloadCrosswordPdf } from '$lib/features/crossword/export/crossword-export.pdf';
 
 import type {
 	CrosswordDownloadMeta,
 	CrosswordPdfMode
-} from '$lib/features/crossword/crossword-export.types';
+} from '$lib/features/crossword/export/crossword-export.types';
 
 import { buildCrosswordLayout } from '$lib/features/crossword/crossword-generator';
 
-import type { CrosswordImportCommit } from '$lib/features/crossword/crossword-import.types';
+import type { CrosswordImportCommit } from '$lib/features/crossword/import/crossword-import.types';
 
-import { CROSSWORD_PDF_MODES } from '$lib/features/crossword/crossword-pdf-modes';
+import { CROSSWORD_PDF_MODES } from '$lib/features/crossword/export/crossword-pdf-modes';
 
 import {
 	addCrosswordHistorySnapshot,

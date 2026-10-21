@@ -11,7 +11,7 @@
 	import CrosswordTitleField from '$lib/features/crossword/components/CrosswordTitleField.svelte';
 	import CrosswordToolbar from '$lib/features/crossword/components/CrosswordToolbar.svelte';
 
-	import type { CrosswordImportCommit } from '$lib/features/crossword/crossword-import.types';
+	import type { CrosswordImportCommit } from '$lib/features/crossword/import/crossword-import.types';
 
 	import { CrosswordSession } from '$lib/features/crossword/crossword-session.svelte';
 

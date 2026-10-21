@@ -1,6 +1,6 @@
 import { CROSSWORD_IMPORT_MAX_SOURCE_ROWS } from '$lib/features/crossword/crossword.constants';
 
-import type { CrosswordImportSource } from '$lib/features/crossword/crossword-import.types';
+import type { CrosswordImportSource } from '$lib/features/crossword/import/crossword-import.types';
 
 import { extractCrosswordImportRowsFromTable } from '$lib/features/crossword/import/crossword-import.shared';
 

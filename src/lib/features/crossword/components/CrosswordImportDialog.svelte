@@ -12,13 +12,13 @@
 		applyCrosswordImport,
 		parseCrosswordImportFile,
 		validateCrosswordImport
-	} from '$lib/features/crossword/crossword-import';
+	} from '$lib/features/crossword/import';
 
 	import type {
 		CrosswordImportCommit,
 		CrosswordImportMergeMode,
 		CrosswordImportSource
-	} from '$lib/features/crossword/crossword-import.types';
+	} from '$lib/features/crossword/import/crossword-import.types';
 
 	import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 

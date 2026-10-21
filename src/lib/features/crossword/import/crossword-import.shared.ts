@@ -6,7 +6,7 @@ import {
 import type {
 	CrosswordImportFileType,
 	CrosswordImportRawRow
-} from '$lib/features/crossword/crossword-import.types';
+} from '$lib/features/crossword/import/crossword-import.types';
 
 /**
  * Beri UI kesempatan render (mis. spinner) sebelum parsing berat yang memblok thread.

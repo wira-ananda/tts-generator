@@ -28,26 +28,28 @@ CI (`.github/workflows/ci.yml`) menjalankan lint, check, test, dan build untuk s
 
 ```
 src/
-├── routes/+page.svelte                 # Merangkai komponen; state ada di CrosswordSession
+├── routes/+page.svelte                     # Merangkai komponen; state ada di CrosswordSession
 ├── lib/
-│   ├── components/                     # UI umum (Icon, ThemeSwitcher, footer)
-│   ├── theme/                          # Light/dark/system theme
-│   ├── utils/download.ts               # Helper download Blob & timestamp nama file
+│   ├── components/ui/                      # Button, Dialog, Icon, ThemeSwitcher
+│   ├── components/layout/                  # Footer
+│   ├── theme/                              # Light/dark/system theme
+│   ├── utils/download.ts                   # Helper download Blob & timestamp nama file
 │   └── features/crossword/
-│       ├── crossword-session.svelte.ts # State + alur kerja editor (autosave, generate, history, import, download)
-│       ├── crossword-generator.ts      # Generator layout (pure, tanpa DOM/storage)
-│       ├── crossword-pdf-modes.ts      # Registry mode PDF: label, orientasi, halaman, nama file
-│       ├── crossword-export.pdf.ts     # Render PDF (pdf-lib, dimuat dinamis)
-│       ├── crossword-image-export.ts   # Render PNG via canvas
-│       ├── crossword-docx-export.ts    # Export soal ke DOCX
-│       ├── crossword.persistence.ts    # Draft & history di localStorage
-│       ├── import/                     # Parser CSV/XLSX/DOCX + validasi import
-│       └── components/                 # Komponen UI fitur crossword
+│       ├── crossword-session.svelte.ts     # State + alur kerja editor (autosave, generate, history, import, download)
+│       ├── crossword-generator.ts          # Generator layout (pure, tanpa DOM/storage)
+│       ├── crossword.persistence.ts        # Draft & history di localStorage
+│       ├── export/
+│       │   ├── crossword-pdf-modes.ts      # Registry mode PDF: label, orientasi, halaman, nama file
+│       │   ├── crossword-export.pdf.ts     # Render PDF (pdf-lib, dimuat dinamis)
+│       │   ├── crossword-image-export.ts   # Render PNG via canvas
+│       │   └── crossword-docx-export.ts    # Export soal ke DOCX
+│       ├── import/                         # Parser CSV/XLSX/DOCX + validasi import
+│       └── components/                     # Komponen UI fitur crossword
 ```
 
 ## Menambah mode PDF
 
-1. Tambahkan nama mode ke union `CrosswordPdfMode` di `crossword-export.types.ts`.
-2. Tambahkan entri di `CROSSWORD_PDF_MODES` (`crossword-pdf-modes.ts`): label, `layoutMode`, daftar `pages`, dan suffix nama file.
+1. Tambahkan nama mode ke union `CrosswordPdfMode` di `export/crossword-export.types.ts`.
+2. Tambahkan entri di `CROSSWORD_PDF_MODES` (`export/crossword-pdf-modes.ts`): label, `layoutMode`, daftar `pages`, dan suffix nama file.
 
 Toolbar, orientasi generator, dan renderer PDF otomatis mengikuti registry. TypeScript akan error bila mode baru belum didaftarkan, dan `crossword-export.pdf.spec.ts` memverifikasi ukuran halaman setiap mode.

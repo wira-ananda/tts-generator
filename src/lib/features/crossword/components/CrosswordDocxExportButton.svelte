@@ -8,7 +8,7 @@
 	import {
 		downloadCurrentCrosswordDocx,
 		getCrosswordDocxExportReadiness
-	} from '$lib/features/crossword/crossword-docx-export';
+	} from '$lib/features/crossword/export/crossword-docx-export';
 
 	import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 

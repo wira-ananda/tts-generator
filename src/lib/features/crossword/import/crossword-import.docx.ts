@@ -3,7 +3,7 @@ import { CROSSWORD_IMPORT_MAX_SOURCE_ROWS } from '$lib/features/crossword/crossw
 import type {
 	CrosswordImportRawRow,
 	CrosswordImportSource
-} from '$lib/features/crossword/crossword-import.types';
+} from '$lib/features/crossword/import/crossword-import.types';
 
 type MammothModule = {
 	extractRawText: (input: { arrayBuffer: ArrayBuffer }) => Promise<{

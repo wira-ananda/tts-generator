@@ -5,7 +5,7 @@ import type {
 	CrosswordImportSource,
 	CrosswordImportValidatedRow,
 	CrosswordImportValidation
-} from '$lib/features/crossword/crossword-import.types';
+} from '$lib/features/crossword/import/crossword-import.types';
 
 import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 

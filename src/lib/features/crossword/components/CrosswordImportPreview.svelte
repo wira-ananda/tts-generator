@@ -11,7 +11,7 @@
 	import type {
 		CrosswordImportMergeMode,
 		CrosswordImportValidation
-	} from '$lib/features/crossword/crossword-import.types';
+	} from '$lib/features/crossword/import/crossword-import.types';
 
 	type Props = {
 		mergeMode: CrosswordImportMergeMode;

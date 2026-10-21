@@ -4,7 +4,7 @@ import type {
 	CrosswordDownloadMeta,
 	CrosswordDownloadState,
 	CrosswordExportReadiness
-} from '$lib/features/crossword/crossword-export.types';
+} from '$lib/features/crossword/export/crossword-export.types';
 
 import type { CrosswordEntry, CrosswordLayout } from '$lib/features/crossword/crossword.types';
 

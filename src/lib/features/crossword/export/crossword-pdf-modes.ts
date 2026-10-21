@@ -1,4 +1,4 @@
-import type { CrosswordPdfMode } from '$lib/features/crossword/crossword-export.types';
+import type { CrosswordPdfMode } from '$lib/features/crossword/export/crossword-export.types';
 
 import type { CrosswordLayoutMode } from '$lib/features/crossword/crossword.types';
 

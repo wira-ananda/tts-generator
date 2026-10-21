@@ -1,4 +1,4 @@
-import type { CrosswordImportSource } from '$lib/features/crossword/crossword-import.types';
+import type { CrosswordImportSource } from '$lib/features/crossword/import/crossword-import.types';
 
 import { parseCrosswordCsvFile } from '$lib/features/crossword/import/crossword-import.csv';
 
