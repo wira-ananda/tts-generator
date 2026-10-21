@@ -34,7 +34,160 @@
 	let hiddenWarningCount = $derived(
 		Math.max(0, validation.warnings.length - visibleWarnings.length)
 	);
+
+	let stats = $derived([
+		{
+			label: 'Rows',
+			value: validation.totalRowCount,
+			tone: 'text-gh-light-fg dark:text-gh-dark-fg'
+		},
+		{
+			label: 'Valid',
+			value: validation.validRowCount,
+			tone: 'text-gh-light-success dark:text-gh-dark-success'
+		},
+		{
+			label: 'Invalid',
+			value: validation.invalidRowCount,
+			tone: 'text-gh-light-danger dark:text-gh-dark-danger'
+		},
+		{
+			label: 'Duplicates',
+			value: validation.duplicateRowCount,
+			tone: 'text-gh-light-fg dark:text-gh-dark-fg'
+		},
+		{
+			label: 'Warnings',
+			value: validation.duplicateAnswerWarningCount,
+			tone: 'text-gh-light-attention dark:text-gh-dark-attention'
+		}
+	]);
+
+	const MESSAGE_TONES = {
+		attention: {
+			section: 'border-gh-light-attention/30 dark:border-gh-dark-attention/30',
+			header:
+				'border-gh-light-attention/20 bg-gh-light-attention-muted dark:border-gh-dark-attention/20 dark:bg-gh-dark-attention-muted',
+			title: 'text-gh-light-attention dark:text-gh-dark-attention'
+		},
+		danger: {
+			section: 'border-gh-light-danger/30 dark:border-gh-dark-danger/30',
+			header:
+				'border-gh-light-danger/20 bg-gh-light-danger-muted dark:border-gh-dark-danger/20 dark:bg-gh-dark-danger-muted',
+			title: 'text-gh-light-danger dark:text-gh-dark-danger'
+		}
+	};
 </script>
+
+{#snippet modeOption(mode: CrosswordImportMergeMode, label: string, description: string)}
+	<button
+		type="button"
+		aria-pressed={mergeMode === mode}
+		class="
+			relative min-h-20
+			rounded-md
+			border border-gh-light-border
+			bg-gh-light-canvas
+			p-3 text-left
+			transition-colors
+			hover:bg-gh-light-subtle
+			focus-visible:ring-2
+			focus-visible:ring-gh-light-focus
+			focus-visible:outline-none
+			aria-pressed:border-gh-light-accent-emphasis
+			aria-pressed:bg-gh-light-accent-muted
+			dark:border-gh-dark-border
+			dark:bg-gh-dark-canvas
+			dark:hover:bg-gh-dark-subtle
+			dark:focus-visible:ring-gh-dark-focus
+			dark:aria-pressed:border-gh-dark-accent-emphasis
+			dark:aria-pressed:bg-gh-dark-accent-muted
+		"
+		onclick={() => onChangeMode(mode)}
+	>
+		<div
+			class="
+				flex items-start
+				justify-between
+				gap-3
+			"
+		>
+			<div>
+				<p
+					class="
+						text-sm
+						font-semibold
+						text-gh-light-fg
+						dark:text-gh-dark-fg
+					"
+				>
+					{label}
+				</p>
+
+				<p
+					class="
+						mt-1
+						text-xs leading-5
+						text-gh-light-muted
+						dark:text-gh-dark-muted
+					"
+				>
+					{description}
+				</p>
+			</div>
+
+			{#if mergeMode === mode}
+				<div
+					class="
+						flex size-5 shrink-0
+						items-center justify-center
+						rounded-full
+						bg-gh-light-accent-emphasis
+						text-white
+						dark:bg-gh-dark-accent-emphasis
+					"
+				>
+					<Icon icon={Check} size={12} strokeWidth={2.5} />
+				</div>
+			{/if}
+		</div>
+	</button>
+{/snippet}
+
+{#snippet rowMessages(
+	tone: keyof typeof MESSAGE_TONES,
+	title: string,
+	items: { rowNumber: number; code: string; message: string }[],
+	hiddenText: string | null
+)}
+	<section class={['overflow-hidden rounded-md border', MESSAGE_TONES[tone].section]}>
+		<header class={['flex min-h-9 items-center border-b px-3', MESSAGE_TONES[tone].header]}>
+			<h3 class={['text-xs font-semibold', MESSAGE_TONES[tone].title]}>
+				{title}
+			</h3>
+		</header>
+
+		<div class="max-h-40 space-y-2 overflow-y-auto p-3">
+			{#each items as item (`${item.rowNumber}-${item.code}`)}
+				<div class="flex gap-2 text-xs leading-5">
+					<span class="shrink-0 font-semibold text-gh-light-fg dark:text-gh-dark-fg">
+						Row {item.rowNumber}
+					</span>
+
+					<span class="text-gh-light-muted dark:text-gh-dark-muted">
+						{item.message}
+					</span>
+				</div>
+			{/each}
+
+			{#if hiddenText}
+				<p class="pt-1 text-xs font-medium text-gh-light-muted dark:text-gh-dark-muted">
+					{hiddenText}
+				</p>
+			{/if}
+		</div>
+	</section>
+{/snippet}
 
 <div class="space-y-4">
 	<section>
@@ -55,313 +208,44 @@
 				sm:grid-cols-2
 			"
 		>
-			<button
-				type="button"
-				aria-pressed={mergeMode === 'append'}
-				class="
-					relative min-h-20
-					rounded-md
-					border border-gh-light-border
-					bg-gh-light-canvas
-					p-3 text-left
-					transition-colors
-					hover:bg-gh-light-subtle
-					focus-visible:ring-2
-					focus-visible:ring-gh-light-focus
-					focus-visible:outline-none
-					aria-pressed:border-gh-light-accent-emphasis
-					aria-pressed:bg-gh-light-accent-muted
-					dark:border-gh-dark-border
-					dark:bg-gh-dark-canvas
-					dark:hover:bg-gh-dark-subtle
-					dark:focus-visible:ring-gh-dark-focus
-					dark:aria-pressed:border-gh-dark-accent-emphasis
-					dark:aria-pressed:bg-gh-dark-accent-muted
-				"
-				onclick={() => onChangeMode('append')}
-			>
-				<div
-					class="
-						flex items-start
-						justify-between
-						gap-3
-					"
-				>
-					<div>
-						<p
-							class="
-								text-sm
-								font-semibold
-								text-gh-light-fg
-								dark:text-gh-dark-fg
-							"
-						>
-							Append
-						</p>
+			{@render modeOption(
+				'append',
+				'Append',
+				'Pertahankan current questions. Trailing blank forms akan diisi lebih dulu.'
+			)}
 
-						<p
-							class="
-								mt-1
-								text-xs leading-5
-								text-gh-light-muted
-								dark:text-gh-dark-muted
-							"
-						>
-							Pertahankan current questions. Trailing blank forms akan diisi lebih dulu.
-						</p>
-					</div>
-
-					{#if mergeMode === 'append'}
-						<div
-							class="
-								flex size-5 shrink-0
-								items-center justify-center
-								rounded-full
-								bg-gh-light-accent-emphasis
-								text-white
-								dark:bg-gh-dark-accent-emphasis
-							"
-						>
-							<Icon icon={Check} size={12} strokeWidth={2.5} />
-						</div>
-					{/if}
-				</div>
-			</button>
-
-			<button
-				type="button"
-				aria-pressed={mergeMode === 'replace'}
-				class="
-					relative min-h-20
-					rounded-md
-					border border-gh-light-border
-					bg-gh-light-canvas
-					p-3 text-left
-					transition-colors
-					hover:bg-gh-light-subtle
-					focus-visible:ring-2
-					focus-visible:ring-gh-light-focus
-					focus-visible:outline-none
-					aria-pressed:border-gh-light-accent-emphasis
-					aria-pressed:bg-gh-light-accent-muted
-					dark:border-gh-dark-border
-					dark:bg-gh-dark-canvas
-					dark:hover:bg-gh-dark-subtle
-					dark:focus-visible:ring-gh-dark-focus
-					dark:aria-pressed:border-gh-dark-accent-emphasis
-					dark:aria-pressed:bg-gh-dark-accent-muted
-				"
-				onclick={() => onChangeMode('replace')}
-			>
-				<div
-					class="
-						flex items-start
-						justify-between
-						gap-3
-					"
-				>
-					<div>
-						<p
-							class="
-								text-sm
-								font-semibold
-								text-gh-light-fg
-								dark:text-gh-dark-fg
-							"
-						>
-							Replace
-						</p>
-
-						<p
-							class="
-								mt-1
-								text-xs leading-5
-								text-gh-light-muted
-								dark:text-gh-dark-muted
-							"
-						>
-							Ganti current questions dengan seluruh valid rows dari file.
-						</p>
-					</div>
-
-					{#if mergeMode === 'replace'}
-						<div
-							class="
-								flex size-5 shrink-0
-								items-center justify-center
-								rounded-full
-								bg-gh-light-accent-emphasis
-								text-white
-								dark:bg-gh-dark-accent-emphasis
-							"
-						>
-							<Icon icon={Check} size={12} strokeWidth={2.5} />
-						</div>
-					{/if}
-				</div>
-			</button>
+			{@render modeOption(
+				'replace',
+				'Replace',
+				'Ganti current questions dengan seluruh valid rows dari file.'
+			)}
 		</div>
 	</section>
 
 	<section
 		class="
-			grid grid-cols-2
+			grid grid-cols-2 gap-px
 			overflow-hidden
 			rounded-md
 			border border-gh-light-border
-			bg-gh-light-canvas
+			bg-gh-light-border-muted
 			sm:grid-cols-5
 			dark:border-gh-dark-border
-			dark:bg-gh-dark-canvas
+			dark:bg-gh-dark-border-muted
 		"
 	>
-		<div class="p-3">
-			<p
-				class="
-					text-[11px]
-					text-gh-light-muted
-					dark:text-gh-dark-muted
-				"
+		{#each stats as stat, index (stat.label)}
+			<div
+				class={[
+					'bg-gh-light-canvas p-3 dark:bg-gh-dark-canvas',
+					index === stats.length - 1 && 'col-span-2 sm:col-span-1'
+				]}
 			>
-				Rows
-			</p>
+				<p class="text-[11px] text-gh-light-muted dark:text-gh-dark-muted">{stat.label}</p>
 
-			<p
-				class="
-					mt-0.5
-					text-sm font-semibold
-					text-gh-light-fg
-					dark:text-gh-dark-fg
-				"
-			>
-				{validation.totalRowCount}
-			</p>
-		</div>
-
-		<div
-			class="
-				border-l
-				border-gh-light-border-muted
-				p-3
-				dark:border-gh-dark-border-muted
-			"
-		>
-			<p
-				class="
-					text-[11px]
-					text-gh-light-muted
-					dark:text-gh-dark-muted
-				"
-			>
-				Valid
-			</p>
-
-			<p
-				class="
-					mt-0.5
-					text-sm font-semibold
-					text-gh-light-success
-					dark:text-gh-dark-success
-				"
-			>
-				{validation.validRowCount}
-			</p>
-		</div>
-
-		<div
-			class="
-				border-t
-				border-gh-light-border-muted
-				p-3
-				sm:border-t-0
-				sm:border-l
-				dark:border-gh-dark-border-muted
-			"
-		>
-			<p
-				class="
-					text-[11px]
-					text-gh-light-muted
-					dark:text-gh-dark-muted
-				"
-			>
-				Invalid
-			</p>
-
-			<p
-				class="
-					mt-0.5
-					text-sm font-semibold
-					text-gh-light-danger
-					dark:text-gh-dark-danger
-				"
-			>
-				{validation.invalidRowCount}
-			</p>
-		</div>
-
-		<div
-			class="
-				border-t border-l
-				border-gh-light-border-muted
-				p-3
-				sm:border-t-0
-				dark:border-gh-dark-border-muted
-			"
-		>
-			<p
-				class="
-					text-[11px]
-					text-gh-light-muted
-					dark:text-gh-dark-muted
-				"
-			>
-				Duplicates
-			</p>
-
-			<p
-				class="
-					mt-0.5
-					text-sm font-semibold
-					text-gh-light-fg
-					dark:text-gh-dark-fg
-				"
-			>
-				{validation.duplicateRowCount}
-			</p>
-		</div>
-
-		<div
-			class="
-				border-t
-				border-gh-light-border-muted
-				p-3
-				sm:border-t-0
-				sm:border-l
-				dark:border-gh-dark-border-muted
-			"
-		>
-			<p
-				class="
-					text-[11px]
-					text-gh-light-muted
-					dark:text-gh-dark-muted
-				"
-			>
-				Warnings
-			</p>
-
-			<p
-				class="
-					mt-0.5
-					text-sm font-semibold
-					text-gh-light-attention
-					dark:text-gh-dark-attention
-				"
-			>
-				{validation.duplicateAnswerWarningCount}
-			</p>
-		</div>
+				<p class={['mt-0.5 text-sm font-semibold', stat.tone]}>{stat.value}</p>
+			</div>
+		{/each}
 	</section>
 
 	{#if validation.limitExceeded}
@@ -572,173 +456,21 @@
 	{/if}
 
 	{#if visibleWarnings.length > 0}
-		<section
-			class="
-				overflow-hidden
-				rounded-md
-				border
-				border-gh-light-attention/30
-				dark:border-gh-dark-attention/30
-			"
-		>
-			<header
-				class="
-					flex min-h-9
-					items-center
-					border-b
-					border-gh-light-attention/20
-					bg-gh-light-attention-muted
-					px-3
-					dark:border-gh-dark-attention/20
-					dark:bg-gh-dark-attention-muted
-				"
-			>
-				<h3
-					class="
-						text-xs font-semibold
-						text-gh-light-attention
-						dark:text-gh-dark-attention
-					"
-				>
-					Warnings (tetap diimport)
-				</h3>
-			</header>
-
-			<div
-				class="
-					max-h-40
-					space-y-2
-					overflow-y-auto
-					p-3
-				"
-			>
-				{#each visibleWarnings as warning (`${warning.rowNumber}-${warning.code}`)}
-					<div
-						class="
-							flex gap-2
-							text-xs leading-5
-						"
-					>
-						<span
-							class="
-								shrink-0 font-semibold
-								text-gh-light-fg
-								dark:text-gh-dark-fg
-							"
-						>
-							Row {warning.rowNumber}
-						</span>
-
-						<span
-							class="
-								text-gh-light-muted
-								dark:text-gh-dark-muted
-							"
-						>
-							{warning.message}
-						</span>
-					</div>
-				{/each}
-
-				{#if hiddenWarningCount > 0}
-					<p
-						class="
-							pt-1
-							text-xs font-medium
-							text-gh-light-muted
-							dark:text-gh-dark-muted
-						"
-					>
-						+ {hiddenWarningCount} warning lainnya tidak ditampilkan.
-					</p>
-				{/if}
-			</div>
-		</section>
+		{@render rowMessages(
+			'attention',
+			'Warnings (tetap diimport)',
+			visibleWarnings,
+			hiddenWarningCount > 0 ? `+ ${hiddenWarningCount} warning lainnya tidak ditampilkan.` : null
+		)}
 	{/if}
 
 	{#if visibleIssues.length > 0}
-		<section
-			class="
-				overflow-hidden
-				rounded-md
-				border
-				border-gh-light-danger/30
-				dark:border-gh-dark-danger/30
-			"
-		>
-			<header
-				class="
-					flex min-h-9
-					items-center
-					border-b
-					border-gh-light-danger/20
-					bg-gh-light-danger-muted
-					px-3
-					dark:border-gh-dark-danger/20
-					dark:bg-gh-dark-danger-muted
-				"
-			>
-				<h3
-					class="
-						text-xs font-semibold
-						text-gh-light-danger
-						dark:text-gh-dark-danger
-					"
-				>
-					Invalid rows
-				</h3>
-			</header>
-
-			<div
-				class="
-					max-h-40
-					space-y-2
-					overflow-y-auto
-					p-3
-				"
-			>
-				{#each visibleIssues as issue (`${issue.rowNumber}-${issue.code}`)}
-					<div
-						class="
-							flex gap-2
-							text-xs leading-5
-						"
-					>
-						<span
-							class="
-								shrink-0 font-semibold
-								text-gh-light-fg
-								dark:text-gh-dark-fg
-							"
-						>
-							Row {issue.rowNumber}
-						</span>
-
-						<span
-							class="
-								text-gh-light-muted
-								dark:text-gh-dark-muted
-							"
-						>
-							{issue.message}
-						</span>
-					</div>
-				{/each}
-
-				{#if hiddenIssueCount > 0}
-					<p
-						class="
-							pt-1
-							text-xs font-medium
-							text-gh-light-muted
-							dark:text-gh-dark-muted
-						"
-					>
-						+ {hiddenIssueCount} issue lainnya tidak ditampilkan.
-					</p>
-				{/if}
-			</div>
-		</section>
+		{@render rowMessages(
+			'danger',
+			'Invalid rows',
+			visibleIssues,
+			hiddenIssueCount > 0 ? `+ ${hiddenIssueCount} issue lainnya tidak ditampilkan.` : null
+		)}
 	{/if}
 
 	{#if validation.invalidRowCount > 0}
