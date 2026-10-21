@@ -62,7 +62,7 @@
 			p-4
 		"
 	>
-		<section
+		<div
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="history-title"
@@ -368,6 +368,6 @@
 					</div>
 				{/if}
 			</div>
-		</section>
+		</div>
 	</div>
 {/if}

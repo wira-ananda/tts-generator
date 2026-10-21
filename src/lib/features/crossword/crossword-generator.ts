@@ -88,6 +88,14 @@ type PreparedEntriesResult = {
 
 type WorkingGrid = Map<string, WorkingCell>;
 
+type LayoutConfig = {
+	readonly widthGrowthPenalty: number;
+	readonly heightGrowthPenalty: number;
+	readonly maxGridHeight: number;
+	readonly maxGridWidth: number;
+	readonly targetRatio: number;
+};
+
 const INTERSECTION_SCORE = 10_000;
 
 /**
@@ -124,7 +132,7 @@ const PORTRAIT_LAYOUT_CONFIG = {
 
 const CENTER_DISTANCE_PENALTY = 2;
 
-let activeLayoutConfig = DEFAULT_LAYOUT_CONFIG;
+let activeLayoutConfig: LayoutConfig = DEFAULT_LAYOUT_CONFIG;
 
 /**
  * Sparse coordinate key.
@@ -367,8 +375,6 @@ function calculateCandidateScore(
 	const overflowHeight = Math.max(0, nextHeight - activeLayoutConfig.maxGridHeight);
 
 	const overflowWidth = Math.max(0, nextWidth - activeLayoutConfig.maxGridWidth);
-
-	const targetRatio = 1.414;
 
 	const currentRatio = nextWidth / nextHeight;
 
@@ -935,8 +941,6 @@ function calculateLayoutScore(layout: CrosswordLayout): number {
 	const intersectionScore = layout.intersectionCount * 10_000;
 
 	const area = layout.width * layout.height;
-
-	const targetRatio = 1.414;
 
 	const currentRatio = layout.width / layout.height;
 

@@ -193,8 +193,7 @@
 
 	function scheduleCrosswordGeneration(
 		nextEntries: CrosswordEntry[],
-		delay = CROSSWORD_GENERATION_DELAY_MS,
-		layoutModeOverride?: 'landscape' | 'portrait'
+		delay = CROSSWORD_GENERATION_DELAY_MS
 	): void {
 		if (generationTimer) {
 			clearTimeout(generationTimer);
@@ -280,14 +279,7 @@
 	function handlePdfModeChange(nextMode: CrosswordPdfMode): void {
 		pdfMode = nextMode;
 
-		const isPortraitMode =
-			nextMode === 'complete-part-2' ||
-			nextMode === 'complete-part-3' ||
-			nextMode === 'questions-only-a3' ||
-			nextMode === 'puzzle-and-questions-a3' ||
-			nextMode === 'puzzle-first-letters-a3';
-
-		scheduleCrosswordGeneration(entries, 0, isPortraitMode ? 'portrait' : 'landscape');
+		scheduleCrosswordGeneration(entries, 0);
 	}
 
 	function saveCurrentSnapshot(label: string): void {

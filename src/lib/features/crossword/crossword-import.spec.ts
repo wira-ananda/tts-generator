@@ -74,9 +74,9 @@ describe('crossword import validation', () => {
 		expect(validation.issues.map((issue) => issue.rowNumber)).toEqual([2, 3, 4]);
 	});
 
-	it('detects duplicate answers inside import', () => {
+	it('rejects rows whose question and answer duplicate another import row', () => {
 		const source = parseCrosswordCsvText(
-			['question,answer', 'Library JS,React', 'Another clue,re-act'].join('\n')
+			['question,answer', 'Library JS,React', '  library   js ,re-act'].join('\n')
 		);
 
 		const validation = validateCrosswordImport(source, [], 'replace');
@@ -88,8 +88,24 @@ describe('crossword import validation', () => {
 		expect(validation.issues[0]?.code).toBe('duplicate-import');
 	});
 
-	it('detects duplicate against existing entries when appending', () => {
+	it('keeps same answer with a different question inside import as a warning', () => {
+		const source = parseCrosswordCsvText(
+			['question,answer', 'Library JS,React', 'Another clue,re-act'].join('\n')
+		);
+
+		const validation = validateCrosswordImport(source, [], 'replace');
+
+		expect(validation.validRowCount).toBe(2);
+
+		expect(validation.duplicateRowCount).toBe(0);
+
+		expect(validation.warnings[0]?.code).toBe('duplicate-answer-import');
+	});
+
+	it('rejects rows that exactly duplicate existing entries when appending', () => {
 		let entries = createInitialCrosswordEntries(1);
+
+		entries = updateCrosswordEntry(entries, 'entry-1', 'clue', 'Framework PHP');
 
 		entries = updateCrosswordEntry(entries, 'entry-1', 'answer', 'Laravel');
 
@@ -100,6 +116,20 @@ describe('crossword import validation', () => {
 		expect(validation.validRowCount).toBe(0);
 
 		expect(validation.issues[0]?.code).toBe('duplicate-existing');
+	});
+
+	it('keeps same answer as existing entry with a different question as a warning', () => {
+		let entries = createInitialCrosswordEntries(1);
+
+		entries = updateCrosswordEntry(entries, 'entry-1', 'answer', 'Laravel');
+
+		const source = parseCrosswordCsvText(['question,answer', 'Framework PHP,laravel'].join('\n'));
+
+		const validation = validateCrosswordImport(source, entries, 'append');
+
+		expect(validation.validRowCount).toBe(1);
+
+		expect(validation.warnings[0]?.code).toBe('duplicate-answer-existing');
 	});
 });
 

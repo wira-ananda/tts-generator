@@ -1,20 +1,8 @@
 <script lang="ts">
-	type SvgNodeTag = 'circle' | 'ellipse' | 'g' | 'line' | 'path' | 'polygon' | 'polyline' | 'rect';
-
-	type SvgNodeAttributes = Record<string, string | number>;
-
-	type IconNode = [tag: SvgNodeTag, attributes: SvgNodeAttributes];
-
-	type IconData = {
-		name?: string;
-		node: IconNode[];
-		size?: number;
-		width?: number;
-		height?: number;
-	};
+	import type { LucideIconNode } from '@lucide/icons';
 
 	type Props = {
-		icon: IconData;
+		icon: { node: LucideIconNode[] };
 		size?: number;
 		strokeWidth?: number;
 		class?: string;
@@ -22,6 +10,14 @@
 
 	let { icon, size = 24, strokeWidth = 2, class: className = '' }: Props = $props();
 </script>
+
+{#snippet renderNode([tag, attributes, children]: LucideIconNode)}
+	<svelte:element this={tag} {...attributes}>
+		{#each children ?? [] as child, index (index)}
+			{@render renderNode(child)}
+		{/each}
+	</svelte:element>
+{/snippet}
 
 <svg
 	xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +33,7 @@
 	aria-hidden="true"
 	focusable="false"
 >
-	{#each icon.node as node}
-		<svelte:element this={node[0]} {...node[1]} />
+	{#each icon.node as node, index (index)}
+		{@render renderNode(node)}
 	{/each}
 </svg>

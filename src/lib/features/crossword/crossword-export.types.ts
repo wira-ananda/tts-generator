@@ -1,5 +1,3 @@
-import type { CrosswordPdfResult } from '$lib/features/crossword/crossword-export.types';
-
 export type CrosswordPdfMode =
 	| 'complete'
 	| 'puzzle-and-questions'
@@ -13,6 +11,22 @@ export type CrosswordPdfMode =
 	| 'puzzle-and-questions-a3'
 	| 'puzzle-first-letters-a3';
 
-export type CrosswordDownloadState = 'never' | 'downloaded' | 'stale';
+export type CrosswordDownloadState = 'never' | 'current' | 'stale';
 
-export type { CrosswordPdfResult };
+export type CrosswordDownloadMeta = {
+	version: 1;
+	signature: string;
+	downloadedAt: string;
+	fileName: string;
+};
+
+export type CrosswordExportReadiness = {
+	ready: boolean;
+	reason: string | null;
+	activeEntryCount: number;
+};
+
+export type CrosswordPdfResult = {
+	fileName: string;
+	downloadedAt: string;
+};

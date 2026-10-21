@@ -31,7 +31,7 @@
 
 	let { open, currentEntries, onClose, onImport }: Props = $props();
 
-	let fileInput: HTMLInputElement | undefined;
+	let fileInput = $state<HTMLInputElement>();
 
 	let mergeMode = $state<CrosswordImportMergeMode>('append');
 
@@ -176,7 +176,7 @@
 			justify-center p-4
 		"
 	>
-		<section
+		<div
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="import-title"
@@ -457,6 +457,6 @@
 					{/if}
 				</button>
 			</footer>
-		</section>
+		</div>
 	</div>
 {/if}

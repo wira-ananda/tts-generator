@@ -898,7 +898,7 @@ export async function downloadCrosswordPdf(
 
 	const fileName = createPdfFileName(crosswordTitle, mode);
 
-	const blob = new Blob([bytes], {
+	const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {
 		type: 'application/pdf'
 	});
 
