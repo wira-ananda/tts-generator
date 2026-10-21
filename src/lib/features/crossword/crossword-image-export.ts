@@ -71,10 +71,6 @@ function createExportCanvas(
 		throw new Error('Canvas tidak tersedia pada browser ini.');
 	}
 
-	/*
-	 * Render di resolusi tinggi supaya angka,
-	 * huruf dan garis tetap tajam.
-	 */
 	context.scale(EXPORT_SCALE, EXPORT_SCALE);
 
 	context.imageSmoothingEnabled = true;
