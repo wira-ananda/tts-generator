@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	import { FileText, LoaderCircle } from '@lucide/icons';
 
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -51,35 +53,9 @@
 		items-end gap-1
 	"
 >
-	<button
-		type="button"
+	<Button
 		disabled={!canExport}
 		title={readiness.reason ?? 'Export current questions and answers as DOCX'}
-		class="
-			inline-flex h-8
-			items-center justify-center
-			gap-2 rounded-md
-			border
-			border-gh-light-border
-			bg-gh-light-button
-			px-3
-			text-sm font-medium
-			text-gh-light-fg
-			shadow-gh-button-light
-			transition-colors
-			hover:bg-gh-light-button-hover
-			focus-visible:ring-2
-			focus-visible:ring-gh-light-focus
-			focus-visible:outline-none
-			disabled:cursor-not-allowed
-			disabled:opacity-50
-			dark:border-gh-dark-border
-			dark:bg-gh-dark-button
-			dark:text-gh-dark-fg
-			dark:shadow-gh-button-dark
-			dark:hover:bg-gh-dark-button-hover
-			dark:focus-visible:ring-gh-dark-focus
-		"
 		onclick={handleExport}
 	>
 		{#if isExporting}
@@ -97,7 +73,7 @@
 
 			<span> DOCX </span>
 		{/if}
-	</button>
+	</Button>
 
 	{#if exportError}
 		<span

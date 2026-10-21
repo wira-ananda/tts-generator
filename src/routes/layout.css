@@ -153,6 +153,10 @@
 		background-color: var(--color-gh-dark-accent-muted);
 		color: var(--color-gh-dark-fg);
 	}
+
+	html:has(dialog[open]) {
+		overflow: hidden;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	import { Plus } from '@lucide/icons';
 
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -92,40 +94,11 @@
 			</p>
 		</div>
 
-		<button
-			type="button"
-			disabled={!canAddQuestion}
-			class="
-				inline-flex h-8 shrink-0
-				items-center gap-2
-				rounded-md
-				border
-				border-gh-light-border
-				bg-gh-light-button
-				px-3
-				text-sm font-medium
-				text-gh-light-fg
-				shadow-gh-button-light
-				transition-colors
-				hover:bg-gh-light-button-hover
-				focus-visible:ring-2
-				focus-visible:ring-gh-light-focus
-				focus-visible:outline-none
-				disabled:cursor-not-allowed
-				disabled:opacity-60
-				dark:border-gh-dark-border
-				dark:bg-gh-dark-button
-				dark:text-gh-dark-fg
-				dark:shadow-gh-button-dark
-				dark:hover:bg-gh-dark-button-hover
-				dark:focus-visible:ring-gh-dark-focus
-			"
-			onclick={handleAddQuestion}
-		>
+		<Button disabled={!canAddQuestion} onclick={handleAddQuestion}>
 			<Icon icon={Plus} size={15} strokeWidth={2} />
 
 			Add question
-		</button>
+		</Button>
 	</header>
 
 	<div
@@ -210,38 +183,11 @@
 						Tambahkan pertanyaan baru untuk mulai membuat teka-teki silang.
 					</p>
 
-					<button
-						type="button"
-						class="
-							mt-3
-							inline-flex h-8
-							items-center gap-2
-							rounded-md
-							border
-							border-gh-light-border
-							bg-gh-light-button
-							px-3
-							text-sm font-medium
-							text-gh-light-fg
-							shadow-gh-button-light
-							transition-colors
-							hover:bg-gh-light-button-hover
-							focus-visible:ring-2
-							focus-visible:ring-gh-light-focus
-							focus-visible:outline-none
-							dark:border-gh-dark-border
-							dark:bg-gh-dark-button
-							dark:text-gh-dark-fg
-							dark:shadow-gh-button-dark
-							dark:hover:bg-gh-dark-button-hover
-							dark:focus-visible:ring-gh-dark-focus
-						"
-						onclick={handleAddQuestion}
-					>
+					<Button class="mt-3" onclick={handleAddQuestion}>
 						<Icon icon={Plus} size={15} />
 
 						Add question
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}

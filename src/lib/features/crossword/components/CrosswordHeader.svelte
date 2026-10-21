@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	import { FileUp, History, Puzzle } from '@lucide/icons';
 
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -84,32 +86,7 @@
 				gap-2
 			"
 		>
-			<button
-				type="button"
-				class="
-					inline-flex h-8
-					items-center gap-2
-					rounded-md
-					border border-gh-light-border
-					bg-gh-light-button
-					px-3
-					text-sm font-medium
-					text-gh-light-fg
-					shadow-gh-button-light
-					transition-colors
-					hover:bg-gh-light-button-hover
-					focus-visible:ring-2
-					focus-visible:ring-gh-light-focus
-					focus-visible:outline-none
-					dark:border-gh-dark-border
-					dark:bg-gh-dark-button
-					dark:text-gh-dark-fg
-					dark:shadow-gh-button-dark
-					dark:hover:bg-gh-dark-button-hover
-					dark:focus-visible:ring-gh-dark-focus
-				"
-				onclick={onOpenHistory}
-			>
+			<Button onclick={onOpenHistory}>
 				<Icon icon={History} size={16} strokeWidth={1.8} />
 
 				<span class="hidden sm:inline"> History </span>
@@ -131,38 +108,13 @@
 						{historyCount}
 					</span>
 				{/if}
-			</button>
+			</Button>
 
-			<button
-				type="button"
-				class="
-					inline-flex h-8
-					items-center gap-2
-					rounded-md
-					border border-gh-light-border
-					bg-gh-light-button
-					px-3
-					text-sm font-medium
-					text-gh-light-fg
-					shadow-gh-button-light
-					transition-colors
-					hover:bg-gh-light-button-hover
-					focus-visible:ring-2
-					focus-visible:ring-gh-light-focus
-					focus-visible:outline-none
-					dark:border-gh-dark-border
-					dark:bg-gh-dark-button
-					dark:text-gh-dark-fg
-					dark:shadow-gh-button-dark
-					dark:hover:bg-gh-dark-button-hover
-					dark:focus-visible:ring-gh-dark-focus
-				"
-				onclick={onOpenImport}
-			>
+			<Button onclick={onOpenImport}>
 				<Icon icon={FileUp} size={16} strokeWidth={1.8} />
 
 				<span class="hidden sm:inline"> Import </span>
-			</button>
+			</Button>
 
 			<ThemeSwitcher />
 		</div>

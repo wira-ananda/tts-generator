@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	import { Trash2 } from '@lucide/icons';
 
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -74,30 +76,15 @@
 			</span>
 		</div>
 
-		<button
-			type="button"
+		<Button
+			variant="ghost-danger"
+			size="icon-sm"
 			aria-label={`Remove question ${index + 1}`}
 			title={`Remove question ${index + 1}`}
-			class="
-				inline-flex size-7 shrink-0
-				items-center justify-center
-				rounded-md
-				text-gh-light-muted
-				transition-colors
-				hover:bg-gh-light-danger-muted
-				hover:text-gh-light-danger
-				focus-visible:ring-2
-				focus-visible:ring-gh-light-focus
-				focus-visible:outline-none
-				dark:text-gh-dark-muted
-				dark:hover:bg-gh-dark-danger-muted
-				dark:hover:text-gh-dark-danger
-				dark:focus-visible:ring-gh-dark-focus
-			"
 			onclick={() => onRemove(entry.id)}
 		>
 			<Icon icon={Trash2} size={15} strokeWidth={1.8} />
-		</button>
+		</Button>
 	</header>
 
 	<div

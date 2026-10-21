@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+
 	import { Download, LoaderCircle, Save } from '@lucide/icons';
 
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -208,40 +210,7 @@
 				{/each}
 			</select>
 
-			<button
-				type="button"
-				disabled={!canDownload || isDownloading}
-				class="
-					inline-flex h-8
-					items-center justify-center
-					gap-2 rounded-md
-					border
-					border-gh-light-success-emphasis
-					bg-gh-light-success-emphasis
-					px-3
-					text-sm font-semibold
-					text-white
-					shadow-gh-button-light
-					transition-[filter,opacity]
-					hover:brightness-95
-					focus-visible:ring-2
-					focus-visible:ring-gh-light-focus
-					focus-visible:outline-none
-					disabled:cursor-not-allowed
-					disabled:border-gh-light-border
-					disabled:bg-gh-light-button
-					disabled:text-gh-light-muted
-					disabled:opacity-60
-					dark:border-gh-dark-success-emphasis
-					dark:bg-gh-dark-success-emphasis
-					dark:shadow-gh-button-dark
-					dark:focus-visible:ring-gh-dark-focus
-					dark:disabled:border-gh-dark-border
-					dark:disabled:bg-gh-dark-button
-					dark:disabled:text-gh-dark-muted
-				"
-				onclick={onDownload}
-			>
+			<Button variant="primary" disabled={!canDownload || isDownloading} onclick={onDownload}>
 				{#if isDownloading}
 					<Icon icon={LoaderCircle} size={15} strokeWidth={1.8} class="animate-spin" />
 
@@ -251,7 +220,7 @@
 
 					Download PDF
 				{/if}
-			</button>
+			</Button>
 		</div>
 
 		{#if !canDownload && disabledReason}
