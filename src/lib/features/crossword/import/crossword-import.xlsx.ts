@@ -4,9 +4,6 @@ import type { CrosswordImportSource } from '$lib/features/crossword/crossword-im
 
 import { extractCrosswordImportRowsFromTable } from '$lib/features/crossword/import/crossword-import.shared';
 
-/**
- * XLSX parser dimuat secara dynamic agar tidak menambah initial bundle.
- */
 export async function parseCrosswordXlsxFile(file: File): Promise<CrosswordImportSource> {
 	const XLSX = await import('xlsx');
 

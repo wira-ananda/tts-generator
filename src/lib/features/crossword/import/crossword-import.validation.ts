@@ -20,28 +20,17 @@ function isEntryCompletelyBlank(entry: CrosswordEntry): boolean {
 }
 
 /**
- * Normalisasi question supaya perbandingan "soal sama persis"
- * tidak sensitif terhadap case atau spasi berlebih.
- *
- * Ini sengaja tidak sekuat normalizeAnswer (tidak strip tanda baca)
- * karena tujuannya cuma mendeteksi row yang benar-benar copy-paste
- * duplicate, bukan fuzzy-matching soal yang mirip.
+ * Sengaja lebih longgar dari normalizeAnswer (tanda baca tidak dibuang): tujuannya
+ * hanya mendeteksi baris hasil copy-paste, bukan soal yang mirip.
  */
 function normalizeQuestionForComparison(question: string): string {
 	return question.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-/**
- * Key row dianggap "duplicate row asli" hanya kalau soal DAN
- * answer-nya sama persis dengan row lain.
- */
 function buildDuplicateRowKey(normalizedAnswer: string, normalizedQuestion: string): string {
 	return `${normalizedAnswer}::${normalizedQuestion}`;
 }
 
-/**
- * Menghitung blank forms yang berada di bagian paling akhir editor.
- */
 export function countTrailingBlankCrosswordEntries(entries: CrosswordEntry[]): number {
 	let count = 0;
 
@@ -58,9 +47,6 @@ export function countTrailingBlankCrosswordEntries(entries: CrosswordEntry[]): n
 	return count;
 }
 
-/**
- * Menghitung kapasitas import berdasarkan mode.
- */
 export function getCrosswordImportCapacity(
 	currentEntries: CrosswordEntry[],
 	mode: CrosswordImportMergeMode
@@ -90,9 +76,6 @@ function getProjectedEntryCount(
 	return currentEntries.length + importCount - reusableCount;
 }
 
-/**
- * Validasi row import tanpa memodifikasi current editor state.
- */
 export function validateCrosswordImport(
 	source: CrosswordImportSource,
 	currentEntries: CrosswordEntry[],
@@ -180,12 +163,8 @@ export function validateCrosswordImport(
 		const rowKey = buildDuplicateRowKey(normalizedAnswer, normalizedQuestion);
 
 		/**
-		 * Row dianggap duplicate row asli (invalid, tidak diimport)
-		 * hanya kalau soal DAN answer-nya sama persis dengan row lain.
-		 *
-		 * Answer yang sama tapi soal berbeda TETAP diimport — cukup
-		 * diberi warning, karena itu bukan copy-paste duplicate,
-		 * hanya kebetulan dua soal berbeda punya jawaban yang sama.
+		 * Soal DAN answer sama persis → issue (tidak diimport).
+		 * Answer sama dengan soal berbeda → hanya warning, tetap diimport.
 		 */
 		if (importedRowKeys.has(rowKey)) {
 			duplicateRowCount += 1;
@@ -287,9 +266,6 @@ export function validateCrosswordImport(
 	};
 }
 
-/**
- * Menerapkan validated rows ke editor state.
- */
 export function applyCrosswordImport(
 	currentEntries: CrosswordEntry[],
 	importRows: CrosswordImportValidatedRow[],

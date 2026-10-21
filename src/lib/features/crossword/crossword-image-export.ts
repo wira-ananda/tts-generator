@@ -220,13 +220,8 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 /**
- * Export crossword grid menjadi high-resolution PNG.
- *
- * Tidak menangkap DOM sehingga:
- * - theme dark/light tidak memengaruhi hasil;
- * - hasil selalu print-friendly;
- * - tidak membutuhkan html2canvas;
- * - layout mengikuti data generator secara deterministik.
+ * Digambar langsung ke canvas dari data layout (bukan screenshot DOM), jadi
+ * hasilnya selalu print-friendly dan tidak terpengaruh theme.
  */
 export async function downloadCrosswordImage({
 	layout,

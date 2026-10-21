@@ -97,16 +97,8 @@ type LayoutConfig = {
 const INTERSECTION_SCORE = 10_000;
 
 /**
- * Halaman grid selalu dicetak di kertas A3 landscape (lebih lebar
- * daripada tinggi). Grid yang bentuknya juga lebih lebar daripada
- * tinggi memanfaatkan kertas itu lebih baik — cell-nya bisa jauh
- * lebih besar dibanding grid yang bentuknya kotak/tinggi.
- *
- * Makanya pertumbuhan ke arah tinggi diberi penalty jauh lebih besar
- * daripada pertumbuhan ke arah lebar, supaya kalau ada pilihan antara
- * menempatkan entry baru dengan meperlebar grid vs mempertinggi grid
- * (intersection count-nya sama), generator lebih milih yang
- * memperlebar.
+ * Target A3 landscape: rasio lebar/tinggi mendekati √2 dengan batas ukuran grid.
+ * Penalti pertumbuhan dan deviasi rasio dipakai bersama di calculateCandidateScore.
  */
 const DEFAULT_LAYOUT_CONFIG = {
 	widthGrowthPenalty: 180,
@@ -117,8 +109,7 @@ const DEFAULT_LAYOUT_CONFIG = {
 } as const;
 
 /**
- * Konfigurasi portrait untuk output A3+ portrait.
- * Lebar tetap dikontrol, tetapi pertumbuhan tinggi lebih disukai.
+ * Target A3 portrait: pertumbuhan ke bawah jauh lebih murah daripada melebar.
  */
 const PORTRAIT_LAYOUT_CONFIG = {
 	widthGrowthPenalty: 320,
@@ -130,16 +121,10 @@ const PORTRAIT_LAYOUT_CONFIG = {
 
 const CENTER_DISTANCE_PENALTY = 2;
 
-/**
- * Sparse coordinate key.
- */
 function createCellKey(x: number, y: number): string {
 	return `${x}:${y}`;
 }
 
-/**
- * Mendapatkan coordinate huruf berdasarkan start dan direction.
- */
 function getCoordinates(
 	startX: number,
 	startY: number,
@@ -164,9 +149,6 @@ function getCoordinates(
 	};
 }
 
-/**
- * Mengambil bounding box sparse grid.
- */
 function getGridBounds(grid: WorkingGrid): GridBounds | null {
 	if (grid.size === 0) {
 		return null;
@@ -201,9 +183,6 @@ function getGridBounds(grid: WorkingGrid): GridBounds | null {
 	};
 }
 
-/**
- * Memastikan candidate tidak melanggar rule crossword.
- */
 function validatePlacementCandidate(
 	grid: WorkingGrid,
 	answer: string,
@@ -231,10 +210,7 @@ function validatePlacementCandidate(
 		startY + deltaY * answer.length
 	);
 
-	/*
-	 * Kata tidak boleh langsung tersambung
-	 * pada ujung kata lain.
-	 */
+	// Ujung kata tidak boleh langsung menempel pada huruf lain.
 	if (grid.has(beforeKey) || grid.has(afterKey)) {
 		return {
 			valid: false,
@@ -261,10 +237,7 @@ function validatePlacementCandidate(
 				};
 			}
 
-			/*
-			 * Satu cell tidak boleh mempunyai dua
-			 * horizontal word atau dua vertical word.
-			 */
+			// Satu cell maksimal dilalui satu kata across dan satu kata down.
 			if (direction === 'across' && existingCell.acrossEntryId) {
 				return {
 					valid: false,
@@ -284,10 +257,7 @@ function validatePlacementCandidate(
 			continue;
 		}
 
-		/*
-		 * Cell baru tidak boleh menempel pada huruf
-		 * lain dari sisi perpendicular.
-		 */
+		// Cell baru tidak boleh bersebelahan dengan huruf lain dari sisi tegak lurus.
 		if (direction === 'across') {
 			if (grid.has(createCellKey(x, y - 1)) || grid.has(createCellKey(x, y + 1))) {
 				return {
@@ -319,8 +289,8 @@ function validatePlacementCandidate(
 }
 
 /**
- * Candidate dengan intersection lebih banyak diprioritaskan.
- * Layout yang memperbesar bounding box diberi penalty.
+ * Utamakan intersection terbanyak; kurangi skor untuk pertumbuhan bounding box,
+ * melewati batas ukuran grid, dan rasio yang menjauh dari target.
  */
 function calculateCandidateScore(
 	grid: WorkingGrid,
@@ -388,9 +358,6 @@ function calculateCandidateScore(
 	);
 }
 
-/**
- * Mencari seluruh placement candidate valid.
- */
 function findPlacementCandidates(
 	grid: WorkingGrid,
 	answer: string,
@@ -408,18 +375,11 @@ function findPlacementCandidates(
 
 			const possibleDirections: CrosswordDirection[] = [];
 
-			/*
-			 * Jika cell berasal dari Across,
-			 * kandidat baru hanya boleh Down.
-			 */
+			// Kata baru harus memotong tegak lurus kata yang sudah ada di cell ini.
 			if (cell.acrossEntryId && !cell.downEntryId) {
 				possibleDirections.push('down');
 			}
 
-			/*
-			 * Jika cell berasal dari Down,
-			 * kandidat baru hanya boleh Across.
-			 */
 			if (cell.downEntryId && !cell.acrossEntryId) {
 				possibleDirections.push('across');
 			}
@@ -494,9 +454,6 @@ function findPlacementCandidates(
 	});
 }
 
-/**
- * Menempatkan satu answer pada sparse grid.
- */
 function placeEntry(
 	grid: WorkingGrid,
 	preparedEntry: PreparedEntry,
@@ -547,7 +504,7 @@ function placeEntry(
 }
 
 /**
- * First answer menjadi anchor horizontal.
+ * Answer pertama menjadi anchor horizontal di origin.
  */
 function placeFirstEntry(grid: WorkingGrid, entry: PreparedEntry): WorkingPlacement {
 	return placeEntry(grid, entry, {
@@ -562,9 +519,6 @@ function placeFirstEntry(grid: WorkingGrid, entry: PreparedEntry): WorkingPlacem
 	});
 }
 
-/**
- * Heuristic connectivity.
- */
 function countSharedLetters(answer: string, otherAnswers: string[]): number {
 	const answerLetters = new Set(answer);
 
@@ -581,9 +535,6 @@ function countSharedLetters(answer: string, otherAnswers: string[]): number {
 	return sharedLetters.size;
 }
 
-/**
- * Deterministic hash untuk alternative attempts.
- */
 function stableHash(value: string): number {
 	let hash = 2166136261;
 
@@ -597,7 +548,8 @@ function stableHash(value: string): number {
 }
 
 /**
- * Membuat entry ordering berbeda tanpa randomness runtime.
+ * Urutan berbeda per attempt secara deterministik (tanpa Math.random),
+ * sehingga hasil generate bisa direproduksi.
  */
 function orderEntriesForAttempt(entries: PreparedEntry[], attemptIndex: number): PreparedEntry[] {
 	if (attemptIndex === 0) {
@@ -654,14 +606,8 @@ function orderEntriesForAttempt(entries: PreparedEntry[], attemptIndex: number):
 }
 
 /**
- * Normalize dan validate raw entries.
- *
- * Dua entry boleh punya answer yang sama persis setelah normalisasi
- * (soal berbeda, jawaban kebetulan sama) — itu bukan error. Keduanya
- * tetap dicoba ditempatkan seperti entry lain; kalau memang tidak
- * ketemu posisi yang valid, baru masuk unplaced lewat alur normal
- * (reason 'no-intersection' / 'no-valid-placement'), bukan langsung
- * ditolak di sini.
+ * Answer yang sama dengan soal berbeda bukan error: tetap dicoba ditempatkan,
+ * dan baru masuk unplaced bila memang tidak ada posisi valid.
  */
 function prepareEntries(entries: CrosswordEntry[]): PreparedEntriesResult {
 	const preparedEntries: PreparedEntry[] = [];
@@ -690,11 +636,7 @@ function prepareEntries(entries: CrosswordEntry[]): PreparedEntriesResult {
 		preparedEntries.push({
 			entry,
 
-			/*
-			 * INI numbering source-of-truth.
-			 *
-			 * Posisi editor adalah nomor soal.
-			 */
+			// Sumber kebenaran penomoran: posisi soal di editor.
 			questionNumber: originalIndex + 1,
 
 			answer: normalizedAnswer,
@@ -710,10 +652,6 @@ function prepareEntries(entries: CrosswordEntry[]): PreparedEntriesResult {
 	};
 }
 
-/**
- * Cek apakah answer minimal mempunyai huruf yang sama
- * dengan crossword saat ini.
- */
 function hasLetterIntersection(grid: WorkingGrid, answer: string): boolean {
 	for (const cell of grid.values()) {
 		if (answer.includes(cell.letter)) {
@@ -724,9 +662,6 @@ function hasLetterIntersection(grid: WorkingGrid, answer: string): boolean {
 	return false;
 }
 
-/**
- * Satu greedy generation attempt.
- */
 function generateWorkingAttempt(
 	entries: PreparedEntry[],
 	attemptIndex: number,
@@ -806,12 +741,7 @@ function generateWorkingAttempt(
 }
 
 /**
- * Convert sparse working grid menjadi final normalized layout.
- *
- * PENTING:
- * Numbering tidak dihitung ulang berdasarkan coordinate.
- *
- * Nomor berasal langsung dari Question editor.
+ * Nomor tidak dihitung ulang dari koordinat; nomor = posisi soal di editor.
  */
 function finalizeLayout(
 	grid: WorkingGrid,
@@ -835,9 +765,6 @@ function finalizeLayout(
 	const placements: CrosswordPlacement[] = workingPlacements.map((placement) => ({
 		entryId: placement.entryId,
 
-		/*
-		 * Tidak ada top-left numbering lagi.
-		 */
 		number: placement.questionNumber,
 
 		answer: placement.answer,
@@ -851,15 +778,7 @@ function finalizeLayout(
 		intersections: placement.intersections
 	}));
 
-	/*
-	 * Satu coordinate bisa menjadi start beberapa question.
-	 *
-	 * Contoh:
-	 * Question 1 Across
-	 * Question 3 Down
-	 *
-	 * Cell menyimpan [1, 3].
-	 */
+	// Satu cell bisa menjadi awal beberapa soal, mis. 1 Across dan 3 Down → [1, 3].
 	const numbersByCoordinate = new Map<string, number[]>();
 
 	for (const placement of placements) {
@@ -927,12 +846,8 @@ function finalizeLayout(
 }
 
 /**
- * Score antar attempt.
- *
- * Height dipenalti lebih berat daripada width supaya layout yang
- * lebih lebar (cocok untuk kertas A3 landscape) selalu diprioritaskan
- * dibanding layout yang bentuknya kotak/tinggi, walau area totalnya
- * sama.
+ * Skor antar attempt: entry tertempatkan > intersection > area kecil dan rasio
+ * mendekati target.
  */
 function calculateLayoutScore(layout: CrosswordLayout, config: LayoutConfig): number {
 	const placedScore = layout.placements.length * 1_000_000;
@@ -951,7 +866,7 @@ function calculateLayoutScore(layout: CrosswordLayout, config: LayoutConfig): nu
 }
 
 /**
- * Unplaced list tetap mengikuti urutan Question editor.
+ * Urutan mengikuti posisi soal di editor.
  */
 function sortUnplacedEntries(
 	unplacedEntries: CrosswordUnplacedEntry[],
@@ -966,10 +881,7 @@ function sortUnplacedEntries(
 }
 
 /**
- * Pure crossword generator.
- *
- * Tidak mengakses DOM, browser, localStorage,
- * ataupun Svelte state.
+ * Pure: tidak mengakses DOM, storage, atau state Svelte.
  */
 export function buildCrosswordLayout(
 	entries: CrosswordEntry[],

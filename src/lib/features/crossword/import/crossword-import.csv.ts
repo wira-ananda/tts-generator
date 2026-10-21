@@ -104,9 +104,6 @@ function parseCsvRows(text: string, maxRows: number): CsvParseResult {
 	};
 }
 
-/**
- * Parse CSV text menjadi source importer.
- */
 export function parseCrosswordCsvText(
 	text: string,
 	fileName = 'import.csv'
@@ -126,9 +123,6 @@ export function parseCrosswordCsvText(
 	};
 }
 
-/**
- * Membaca CSV File dari browser.
- */
 export async function parseCrosswordCsvFile(file: File): Promise<CrosswordImportSource> {
 	const text = await file.text();
 

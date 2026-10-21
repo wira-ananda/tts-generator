@@ -83,7 +83,6 @@
 			dark:md:divide-gh-dark-border-muted
 		"
 	>
-		<!-- Mendatar -->
 		<div
 			class="
 				min-w-0
@@ -173,7 +172,6 @@
 			</div>
 		</div>
 
-		<!-- Menurun -->
 		<div class="min-w-0 p-3">
 			<h5
 				class="

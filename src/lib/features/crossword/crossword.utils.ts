@@ -9,9 +9,6 @@ import type {
 	CrosswordLayout
 } from '$lib/features/crossword/crossword.types';
 
-/**
- * Membuat satu entry TTS dengan identifier stabil.
- */
 export function createCrosswordEntry(sequence: number): CrosswordEntry {
 	return {
 		id: `entry-${sequence}`,
@@ -20,9 +17,6 @@ export function createCrosswordEntry(sequence: number): CrosswordEntry {
 	};
 }
 
-/**
- * Membuat kumpulan entry awal editor.
- */
 export function createInitialCrosswordEntries(
 	count = INITIAL_CROSSWORD_ENTRY_COUNT
 ): CrosswordEntry[] {
@@ -37,10 +31,7 @@ export function createInitialCrosswordEntries(
 }
 
 /**
- * Mengambil sequence ID berikutnya berdasarkan ID terbesar.
- *
- * ID tidak mengikuti visual numbering setelah remove.
- * ID hanya dipakai sebagai stable identity.
+ * ID hanya identitas stabil; tidak mengikuti nomor soal setelah ada entry yang dihapus.
  */
 export function getNextCrosswordEntrySequence(entries: CrosswordEntry[]): number {
 	const highestSequence = entries.reduce((highest, entry) => {
@@ -62,9 +53,6 @@ export function getNextCrosswordEntrySequence(entries: CrosswordEntry[]): number
 	return highestSequence + 1;
 }
 
-/**
- * Mengubah satu field entry secara immutable.
- */
 export function updateCrosswordEntry(
 	entries: CrosswordEntry[],
 	entryId: string,
@@ -83,17 +71,12 @@ export function updateCrosswordEntry(
 	});
 }
 
-/**
- * Menghapus satu entry berdasarkan ID.
- */
 export function removeCrosswordEntry(entries: CrosswordEntry[], entryId: string): CrosswordEntry[] {
 	return entries.filter((entry) => entry.id !== entryId);
 }
 
 /**
- * Jawaban original tetap disimpan di editor.
- *
- * Crossword hanya menggunakan versi normalized.
+ * Bentuk jawaban yang dipakai generator; teks asli tetap disimpan di editor.
  */
 export function normalizeAnswer(answer: string): string {
 	return answer
@@ -104,7 +87,7 @@ export function normalizeAnswer(answer: string): string {
 }
 
 /**
- * Entry dianggap complete apabila clue dan answer valid terisi.
+ * Complete = clue terisi dan answer valid setelah normalisasi.
  */
 export function countCompletedCrosswordEntries(entries: CrosswordEntry[]): number {
 	return entries.filter((entry) => entry.clue.trim() !== '' && normalizeAnswer(entry.answer) !== '')
@@ -112,22 +95,17 @@ export function countCompletedCrosswordEntries(entries: CrosswordEntry[]): numbe
 }
 
 /**
- * Menghitung answer yang dapat dicoba generator.
- *
- * Answer boleh menghasilkan preview walaupun clue belum diisi.
+ * Clue tidak wajib: answer saja sudah cukup untuk preview.
  */
 export function countCrosswordAnswerEntries(entries: CrosswordEntry[]): number {
 	return entries.filter((entry) => normalizeAnswer(entry.answer) !== '').length;
 }
 
 /**
- * Signature menentukan kapan layout perlu regenerate.
+ * Layout di-generate ulang hanya bila signature berubah.
  *
- * Selain answer, questionNumber ikut dimasukkan.
- *
- * Ini penting karena jika user menghapus Question 2 yang kosong,
- * Question 3 berubah menjadi Question 2 walaupun answer-nya sama.
- * Grid dan clue numbering tetap harus ikut berubah.
+ * Nomor soal ikut dimasukkan karena menghapus soal kosong di tengah
+ * menggeser nomor soal berikutnya walaupun answer-nya sama.
  */
 export function createCrosswordGenerationSignature(entries: CrosswordEntry[]): string {
 	const values = entries
@@ -143,9 +121,6 @@ export function createCrosswordGenerationSignature(entries: CrosswordEntry[]): s
 	return JSON.stringify(values);
 }
 
-/**
- * Initial / reset layout.
- */
 export function createEmptyCrosswordLayout(): CrosswordLayout {
 	return {
 		placements: [],

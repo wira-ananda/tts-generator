@@ -9,7 +9,7 @@ import type {
 } from '$lib/features/crossword/crossword-import.types';
 
 /**
- * Memberi browser satu event-loop turn sebelum parsing berat dimulai.
+ * Beri UI kesempatan render (mis. spinner) sebelum parsing berat yang memblok thread.
  */
 export function waitForBrowserTurn(): Promise<void> {
 	return new Promise((resolve) => {
@@ -17,18 +17,12 @@ export function waitForBrowserTurn(): Promise<void> {
 	});
 }
 
-/**
- * Memvalidasi ukuran file sebelum parser membaca seluruh konten.
- */
 export function assertCrosswordImportFileSize(file: File): void {
 	if (file.size > CROSSWORD_IMPORT_MAX_FILE_SIZE_BYTES) {
 		throw new Error('File terlalu besar. Maksimal ukuran import adalah 5 MB.');
 	}
 }
 
-/**
- * Mengambil extension file secara case-insensitive.
- */
 export function getFileExtension(fileName: string): string {
 	const dotIndex = fileName.lastIndexOf('.');
 
@@ -39,9 +33,6 @@ export function getFileExtension(fileName: string): string {
 	return fileName.slice(dotIndex + 1).toLowerCase();
 }
 
-/**
- * Menentukan parser berdasarkan extension file.
- */
 export function getCrosswordImportFileType(fileName: string): CrosswordImportFileType {
 	const extension = getFileExtension(fileName);
 
@@ -66,9 +57,6 @@ export function getCrosswordImportFileType(fileName: string): CrosswordImportFil
 	throw new Error('Format file tidak didukung. Gunakan .csv, .xlsx, atau .docx.');
 }
 
-/**
- * Mengubah spreadsheet cell menjadi text aman.
- */
 export function toImportCellText(value: unknown): string {
 	if (value === null || value === undefined) {
 		return '';
@@ -77,9 +65,6 @@ export function toImportCellText(value: unknown): string {
 	return String(value).trim();
 }
 
-/**
- * Normalisasi header CSV/XLSX.
- */
 export function normalizeImportHeader(value: unknown): string {
 	return String(value ?? '')
 		.replace(/^\uFEFF/, '')
@@ -91,9 +76,6 @@ function isTableRowEmpty(row: unknown[]): boolean {
 	return row.every((value) => toImportCellText(value) === '');
 }
 
-/**
- * Mengubah matrix CSV/XLSX menjadi format row importer.
- */
 export function extractCrosswordImportRowsFromTable(table: unknown[][]): CrosswordImportRawRow[] {
 	if (table.length === 0) {
 		throw new Error('File tidak memiliki data.');

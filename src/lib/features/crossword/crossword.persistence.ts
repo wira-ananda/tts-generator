@@ -25,16 +25,12 @@ type CreateHistoryOptions = {
 	savedAt?: string;
 };
 
-/**
- * Memastikan value merupakan plain object sebelum membaca property.
- */
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
- * Membuat salinan entries agar history dan draft tidak berbagi reference
- * dengan state editor aktif.
+ * Salinan agar draft/history tidak berbagi reference dengan state editor.
  */
 export function cloneCrosswordEntries(entries: CrosswordEntry[]): CrosswordEntry[] {
 	return entries.map((entry) => ({
@@ -44,9 +40,6 @@ export function cloneCrosswordEntries(entries: CrosswordEntry[]): CrosswordEntry
 	}));
 }
 
-/**
- * Memvalidasi entries yang dibaca dari browser storage.
- */
 export function parsePersistedCrosswordEntries(value: unknown): CrosswordEntry[] | null {
 	if (!Array.isArray(value)) {
 		return null;
@@ -82,18 +75,12 @@ export function parsePersistedCrosswordEntries(value: unknown): CrosswordEntry[]
 	return entries;
 }
 
-/**
- * Mengecek apakah editor mempunyai content yang layak disimpan
- * sebagai version history.
- */
 export function hasCrosswordEntryContent(entries: CrosswordEntry[]): boolean {
 	return entries.some((entry) => entry.clue.trim() !== '' || entry.answer.trim() !== '');
 }
 
 /**
- * Membaca current draft dari localStorage.
- *
- * Data yang malformed akan diabaikan supaya aplikasi tetap bisa dibuka.
+ * Data malformed diabaikan (return null) supaya aplikasi tetap bisa dibuka.
  */
 export function readCrosswordDraft(): CrosswordDraft | null {
 	if (!browser) {
@@ -123,10 +110,7 @@ export function readCrosswordDraft(): CrosswordDraft | null {
 			return null;
 		}
 
-		/**
-		 * Draft lama (sebelum fitur judul TTS ada) tidak mempunyai
-		 * field title. Default ke string kosong supaya tetap kompatibel.
-		 */
+		// Draft lama belum punya field title.
 		const title = typeof parsedDraft.title === 'string' ? parsedDraft.title : '';
 
 		return {
@@ -140,9 +124,6 @@ export function readCrosswordDraft(): CrosswordDraft | null {
 	}
 }
 
-/**
- * Menyimpan current draft ke localStorage.
- */
 export function saveCrosswordDraft(entries: CrosswordEntry[], title: string): PersistenceResult {
 	if (!browser) {
 		return {
@@ -175,9 +156,6 @@ export function saveCrosswordDraft(entries: CrosswordEntry[], title: string): Pe
 	}
 }
 
-/**
- * Membuat identifier history yang cukup unik untuk local browser storage.
- */
 function createHistoryId(): string {
 	if (
 		typeof globalThis.crypto !== 'undefined' &&
@@ -189,9 +167,6 @@ function createHistoryId(): string {
 	return `history-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/**
- * Membuat immutable snapshot dari current crossword entries.
- */
 export function createCrosswordHistoryItem(
 	entries: CrosswordEntry[],
 	label: string,
@@ -209,8 +184,7 @@ export function createCrosswordHistoryItem(
 }
 
 /**
- * Menambahkan history terbaru ke bagian atas dan menjaga
- * jumlah snapshot tetap bounded.
+ * Item terbaru di depan; jumlah dibatasi MAX_CROSSWORD_HISTORY_COUNT.
  */
 export function prependCrosswordHistoryItem(
 	currentItems: CrosswordHistoryItem[],
@@ -220,9 +194,6 @@ export function prependCrosswordHistoryItem(
 	return [newItem, ...currentItems].slice(0, Math.max(maxItems, 0));
 }
 
-/**
- * Memvalidasi satu history item yang berasal dari localStorage.
- */
 function parseCrosswordHistoryItem(value: unknown): CrosswordHistoryItem | null {
 	if (!isRecord(value)) {
 		return null;
@@ -251,9 +222,6 @@ function parseCrosswordHistoryItem(value: unknown): CrosswordHistoryItem | null 
 	};
 }
 
-/**
- * Membaca seluruh bounded history dari localStorage.
- */
 export function readCrosswordHistory(): CrosswordHistoryItem[] {
 	if (!browser) {
 		return [];
@@ -298,9 +266,6 @@ export function readCrosswordHistory(): CrosswordHistoryItem[] {
 	}
 }
 
-/**
- * Menulis seluruh bounded history ke localStorage.
- */
 function writeCrosswordHistory(items: CrosswordHistoryItem[]): boolean {
 	if (!browser) {
 		return false;
@@ -320,9 +285,6 @@ function writeCrosswordHistory(items: CrosswordHistoryItem[]): boolean {
 	}
 }
 
-/**
- * Membuat dan menyimpan satu snapshot baru ke local history.
- */
 export function addCrosswordHistorySnapshot(
 	entries: CrosswordEntry[],
 	label: string

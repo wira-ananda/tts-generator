@@ -67,7 +67,7 @@ function parseWordQuestionLine(line: string, fallbackNumber: number): CrosswordI
 }
 
 /**
- * Pure parser untuk text yang sudah diekstrak dari DOCX.
+ * Pure: menerima teks yang sudah diekstrak, sehingga bisa dites tanpa file DOCX.
  */
 export function parseCrosswordWordText(
 	text: string,
@@ -96,9 +96,7 @@ export function parseCrosswordWordText(
 }
 
 /**
- * Membaca raw text DOCX menggunakan Mammoth.
- *
- * Hasil Word tidak dirender sebagai HTML.
+ * Hanya mengambil raw text; konten Word tidak pernah dirender sebagai HTML.
  */
 export async function parseCrosswordDocxFile(file: File): Promise<CrosswordImportSource> {
 	const importedModule = (await import('mammoth')) as unknown as MammothModule & {

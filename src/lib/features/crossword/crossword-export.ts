@@ -13,7 +13,7 @@ import { normalizeAnswer } from '$lib/features/crossword/crossword.utils';
 const DOWNLOAD_STORAGE_KEY = 'tts-generator:download:v1';
 
 /**
- * Signature berubah jika content atau layout PDF berubah.
+ * Berubah bila isi soal atau layout grid berubah; dipakai untuk status "PDF sudah usang".
  */
 export function createCrosswordExportSignature(
 	entries: CrosswordEntry[],
@@ -122,9 +122,6 @@ export function getCrosswordExportReadiness(
 	};
 }
 
-/**
- * Membaca metadata download terakhir.
- */
 export function readCrosswordDownloadMeta(): CrosswordDownloadMeta | null {
 	if (!browser) {
 		return null;
@@ -162,9 +159,6 @@ export function readCrosswordDownloadMeta(): CrosswordDownloadMeta | null {
 	}
 }
 
-/**
- * Menyimpan metadata successful download.
- */
 export function saveCrosswordDownloadMeta(meta: CrosswordDownloadMeta): boolean {
 	if (!browser) {
 		return false;
@@ -179,9 +173,6 @@ export function saveCrosswordDownloadMeta(meta: CrosswordDownloadMeta): boolean 
 	}
 }
 
-/**
- * Menentukan status download terhadap state sekarang.
- */
 export function getCrosswordDownloadState(
 	meta: CrosswordDownloadMeta | null,
 	currentSignature: string

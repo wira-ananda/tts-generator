@@ -157,7 +157,6 @@
 				items-center gap-2
 			"
 		>
-			<!-- Download current preview mode -->
 			<button
 				type="button"
 				disabled={!canDownloadImage}
@@ -207,7 +206,6 @@
 				</span>
 			</button>
 
-			<!-- Preview mode switch -->
 			<div
 				class="
 					inline-flex h-8

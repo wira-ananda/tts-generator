@@ -13,7 +13,6 @@
 
 	let selectedTheme = $state<ThemeMode>('system');
 
-	// Sinkronisasi theme dengan browser preference dan perubahan theme OS.
 	$effect(() => {
 		selectedTheme = getStoredThemeMode();
 		applyThemeMode(selectedTheme);

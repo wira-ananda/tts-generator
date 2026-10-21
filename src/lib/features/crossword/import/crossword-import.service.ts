@@ -12,9 +12,6 @@ import {
 
 import { parseCrosswordXlsxFile } from '$lib/features/crossword/import/crossword-import.xlsx';
 
-/**
- * Memilih parser sesuai format file.
- */
 export async function parseCrosswordImportFile(file: File): Promise<CrosswordImportSource> {
 	assertCrosswordImportFileSize(file);
 

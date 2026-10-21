@@ -6,16 +6,10 @@ export const THEME_STORAGE_KEY = 'tts-generator:theme';
 
 const DARK_MODE_QUERY = '(prefers-color-scheme: dark)';
 
-/**
- * Memastikan value dari storage merupakan theme mode yang didukung aplikasi.
- */
 export function isThemeMode(value: string | null): value is ThemeMode {
 	return THEME_MODES.some((themeMode) => themeMode === value);
 }
 
-/**
- * Mengambil theme preference yang pernah disimpan pada browser.
- */
 export function getStoredThemeMode(): ThemeMode {
 	if (!browser) {
 		return 'system';
@@ -30,9 +24,6 @@ export function getStoredThemeMode(): ThemeMode {
 	}
 }
 
-/**
- * Mengubah theme preference menjadi theme aktual yang dirender browser.
- */
 export function resolveThemeMode(themeMode: ThemeMode): ResolvedTheme {
 	if (themeMode !== 'system') {
 		return themeMode;
@@ -46,7 +37,7 @@ export function resolveThemeMode(themeMode: ThemeMode): ResolvedTheme {
 }
 
 /**
- * Menerapkan resolved theme ke root document tanpa mengubah preference user.
+ * Hanya menerapkan ke DOM; tidak menyimpan preference.
  */
 export function applyThemeMode(themeMode: ThemeMode): void {
 	if (!browser) {
@@ -60,9 +51,6 @@ export function applyThemeMode(themeMode: ThemeMode): void {
 	document.documentElement.style.colorScheme = resolvedTheme;
 }
 
-/**
- * Menyimpan theme preference ke browser dan langsung menerapkannya.
- */
 export function setThemeMode(themeMode: ThemeMode): void {
 	if (!browser) {
 		return;
@@ -77,9 +65,6 @@ export function setThemeMode(themeMode: ThemeMode): void {
 	applyThemeMode(themeMode);
 }
 
-/**
- * Menyinkronkan system theme ketika preference OS berubah.
- */
 export function watchSystemTheme(onChange: (resolvedTheme: ResolvedTheme) => void): () => void {
 	if (!browser) {
 		return () => undefined;

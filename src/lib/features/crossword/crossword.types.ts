@@ -15,12 +15,7 @@ export type CrosswordUnplacedReason = 'invalid-answer' | 'no-intersection' | 'no
 export type CrosswordPlacement = {
 	entryId: string;
 
-	/**
-	 * Nomor selalu mengikuti posisi Question pada editor.
-	 *
-	 * Question 1 → number 1
-	 * Question 7 → number 7
-	 */
+	/** Sama dengan posisi soal di editor (soal ke-7 → 7). */
 	number: number;
 
 	answer: string;
@@ -39,15 +34,7 @@ export type CrosswordCell = {
 
 	letter: string;
 
-	/**
-	 * Satu cell dapat menjadi starting point lebih dari satu answer.
-	 *
-	 * Contoh:
-	 * Question 1 Across
-	 * Question 3 Down
-	 *
-	 * keduanya mulai pada cell yang sama.
-	 */
+	/** Bisa lebih dari satu bila beberapa soal mulai di cell yang sama. */
 	numbers?: number[];
 
 	acrossEntryId?: string;

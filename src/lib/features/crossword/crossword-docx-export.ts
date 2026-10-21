@@ -21,10 +21,7 @@ export type CrosswordDocxExportResult = {
 };
 
 /**
- * Current editor rows yang benar-benar memiliki content.
- *
- * Fully blank rows sengaja diabaikan karena 10 form awal
- * memang merupakan editor slots, bukan actual questions.
+ * Baris yang benar-benar kosong diabaikan: itu slot form editor, bukan soal.
  */
 function getActiveCrosswordEntries(entries: CrosswordEntry[]): Array<{
 	entry: CrosswordEntry;
@@ -41,10 +38,7 @@ function getActiveCrosswordEntries(entries: CrosswordEntry[]): Array<{
 }
 
 /**
- * Memastikan current questions bisa diexport secara utuh.
- *
- * Export menggunakan current editor state saja,
- * bukan History dan bukan localStorage snapshot.
+ * Hanya membaca state editor saat ini, bukan History/localStorage.
  */
 export function getCrosswordDocxExportReadiness(
 	entries: CrosswordEntry[]
@@ -101,35 +95,18 @@ function createCrosswordDocxFileName(): string {
 }
 
 /**
- * Download seluruh current Question + Answer menjadi DOCX.
- *
- * Format:
- *
- * 1. Question = Answer
- * 2. Question = Answer
- *
- * Tidak membaca History.
+ * Format per baris: `1. Question = Answer`.
  */
 export async function downloadCurrentCrosswordDocx(
 	entries: CrosswordEntry[]
 ): Promise<CrosswordDocxExportResult> {
-	/*
-	 * Snapshot validation dilakukan sebelum dynamic import.
-	 *
-	 * String data yang dipakai exporter sudah detached dari
-	 * reactive editor state.
-	 */
 	const readiness = getCrosswordDocxExportReadiness(entries);
 
 	if (!readiness.ready || readiness.entries.length === 0) {
 		throw new Error(readiness.reason ?? 'Soal belum siap diexport.');
 	}
 
-	/*
-	 * DOCX library tidak masuk initial page bundle.
-	 * Hanya didownload browser ketika user benar-benar
-	 * menjalankan export.
-	 */
+	// Dynamic import agar library docx tidak masuk bundle awal.
 	const { Document, Packer, Paragraph, TextRun } = await import('docx');
 
 	const paragraphs = readiness.entries.map((item) => {
