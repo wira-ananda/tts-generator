@@ -65,8 +65,6 @@ export type CrosswordLayout = {
 
 	cells: CrosswordCell[];
 
-	unplacedEntryIds: string[];
-
 	unplacedEntries: CrosswordUnplacedEntry[];
 
 	width: number;
@@ -75,6 +73,9 @@ export type CrosswordLayout = {
 	intersectionCount: number;
 };
 
+export type CrosswordLayoutMode = 'landscape' | 'portrait';
+
 export type CrosswordGeneratorOptions = {
 	attempts?: number;
+	layoutMode?: CrosswordLayoutMode;
 };

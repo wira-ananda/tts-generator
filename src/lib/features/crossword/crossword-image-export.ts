@@ -3,6 +3,8 @@ import type {
 	CrosswordPreviewMode
 } from '$lib/features/crossword/crossword.types';
 
+import { createFileTimestamp, triggerBlobDownload } from '$lib/utils/download';
+
 const EXPORT_CELL_SIZE = 64;
 
 const EXPORT_PADDING = 72;
@@ -26,17 +28,9 @@ type DownloadCrosswordImageOptions = {
 };
 
 function createExportFileName(mode: CrosswordPreviewMode): string {
-	const now = new Date();
-
-	const pad = (value: number): string => String(value).padStart(2, '0');
-
-	const date = [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join('-');
-
-	const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-
 	const modeName = mode === 'answer' ? 'answer-key' : 'puzzle';
 
-	return `tts-${modeName}-${date}-${time}.png`;
+	return `tts-${modeName}-${createFileTimestamp(new Date(), { withSeconds: true })}.png`;
 }
 
 function getModeTitle(mode: CrosswordPreviewMode): string {
@@ -223,32 +217,6 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 			1
 		);
 	});
-}
-
-function triggerBlobDownload(blob: Blob, fileName: string): void {
-	const url = URL.createObjectURL(blob);
-
-	const anchor = document.createElement('a');
-
-	anchor.href = url;
-
-	anchor.download = fileName;
-
-	anchor.rel = 'noreferrer';
-
-	document.body.appendChild(anchor);
-
-	anchor.click();
-
-	anchor.remove();
-
-	/*
-	 * Jangan revoke sebelum browser sempat
-	 * mengambil Blob URL.
-	 */
-	setTimeout(() => {
-		URL.revokeObjectURL(url);
-	}, 0);
 }
 
 /**

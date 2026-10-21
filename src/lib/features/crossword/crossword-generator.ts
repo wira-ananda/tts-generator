@@ -78,8 +78,6 @@ type AttemptResult = {
 	score: number;
 };
 
-type CrosswordLayoutMode = 'landscape' | 'portrait';
-
 type PreparedEntriesResult = {
 	entries: PreparedEntry[];
 
@@ -131,8 +129,6 @@ const PORTRAIT_LAYOUT_CONFIG = {
 } as const;
 
 const CENTER_DISTANCE_PENALTY = 2;
-
-let activeLayoutConfig: LayoutConfig = DEFAULT_LAYOUT_CONFIG;
 
 /**
  * Sparse coordinate key.
@@ -332,7 +328,8 @@ function calculateCandidateScore(
 	startX: number,
 	startY: number,
 	direction: CrosswordDirection,
-	intersections: number
+	intersections: number,
+	config: LayoutConfig
 ): number {
 	const currentBounds = getGridBounds(grid);
 
@@ -372,18 +369,18 @@ function calculateCandidateScore(
 
 	const centerDistance = Math.abs(centerX) + Math.abs(centerY);
 
-	const overflowHeight = Math.max(0, nextHeight - activeLayoutConfig.maxGridHeight);
+	const overflowHeight = Math.max(0, nextHeight - config.maxGridHeight);
 
-	const overflowWidth = Math.max(0, nextWidth - activeLayoutConfig.maxGridWidth);
+	const overflowWidth = Math.max(0, nextWidth - config.maxGridWidth);
 
 	const currentRatio = nextWidth / nextHeight;
 
-	const aspectRatioPenalty = Math.abs(currentRatio - activeLayoutConfig.targetRatio) * 5000;
+	const aspectRatioPenalty = Math.abs(currentRatio - config.targetRatio) * 5000;
 
 	return (
 		intersections * INTERSECTION_SCORE -
-		widthGrowth * activeLayoutConfig.widthGrowthPenalty -
-		heightGrowth * activeLayoutConfig.heightGrowthPenalty -
+		widthGrowth * config.widthGrowthPenalty -
+		heightGrowth * config.heightGrowthPenalty -
 		overflowHeight * 10000 -
 		overflowWidth * 10000 -
 		aspectRatioPenalty -
@@ -394,7 +391,11 @@ function calculateCandidateScore(
 /**
  * Mencari seluruh placement candidate valid.
  */
-function findPlacementCandidates(grid: WorkingGrid, answer: string): PlacementCandidate[] {
+function findPlacementCandidates(
+	grid: WorkingGrid,
+	answer: string,
+	config: LayoutConfig
+): PlacementCandidate[] {
 	const candidates: PlacementCandidate[] = [];
 
 	const seenCandidates = new Set<string>();
@@ -464,7 +465,8 @@ function findPlacementCandidates(grid: WorkingGrid, answer: string): PlacementCa
 						startX,
 						startY,
 						direction,
-						validation.intersections
+						validation.intersections,
+						config
 					)
 				});
 			}
@@ -727,7 +729,8 @@ function hasLetterIntersection(grid: WorkingGrid, answer: string): boolean {
  */
 function generateWorkingAttempt(
 	entries: PreparedEntry[],
-	attemptIndex: number
+	attemptIndex: number,
+	config: LayoutConfig
 ): {
 	grid: WorkingGrid;
 
@@ -763,7 +766,7 @@ function generateWorkingAttempt(
 		let placedThisPass = 0;
 
 		for (const entry of pendingEntries) {
-			const candidates = findPlacementCandidates(grid, entry.answer);
+			const candidates = findPlacementCandidates(grid, entry.answer, config);
 
 			const bestCandidate = candidates[0];
 
@@ -820,8 +823,6 @@ function finalizeLayout(
 	if (!bounds) {
 		return {
 			...createEmptyCrosswordLayout(),
-
-			unplacedEntryIds: unplacedEntries.map((entry) => entry.entryId),
 
 			unplacedEntries
 		};
@@ -915,8 +916,6 @@ function finalizeLayout(
 
 		cells,
 
-		unplacedEntryIds: unplacedEntries.map((entry) => entry.entryId),
-
 		unplacedEntries,
 
 		width: bounds.width,
@@ -935,7 +934,7 @@ function finalizeLayout(
  * dibanding layout yang bentuknya kotak/tinggi, walau area totalnya
  * sama.
  */
-function calculateLayoutScore(layout: CrosswordLayout): number {
+function calculateLayoutScore(layout: CrosswordLayout, config: LayoutConfig): number {
 	const placedScore = layout.placements.length * 1_000_000;
 
 	const intersectionScore = layout.intersectionCount * 10_000;
@@ -944,7 +943,7 @@ function calculateLayoutScore(layout: CrosswordLayout): number {
 
 	const currentRatio = layout.width / layout.height;
 
-	const aspectRatioPenalty = Math.abs(currentRatio - activeLayoutConfig.targetRatio) * 5000;
+	const aspectRatioPenalty = Math.abs(currentRatio - config.targetRatio) * 5000;
 
 	return (
 		placedScore + intersectionScore - area * 10 - aspectRatioPenalty - layout.width - layout.height
@@ -974,12 +973,9 @@ function sortUnplacedEntries(
  */
 export function buildCrosswordLayout(
 	entries: CrosswordEntry[],
-	options: CrosswordGeneratorOptions & {
-		layoutMode?: CrosswordLayoutMode;
-	} = {}
+	options: CrosswordGeneratorOptions = {}
 ): CrosswordLayout {
-	activeLayoutConfig =
-		options.layoutMode === 'portrait' ? PORTRAIT_LAYOUT_CONFIG : DEFAULT_LAYOUT_CONFIG;
+	const config = options.layoutMode === 'portrait' ? PORTRAIT_LAYOUT_CONFIG : DEFAULT_LAYOUT_CONFIG;
 
 	const {
 		entries: preparedEntries,
@@ -993,8 +989,6 @@ export function buildCrosswordLayout(
 		return {
 			...createEmptyCrosswordLayout(),
 
-			unplacedEntryIds: sortedUnplaced.map((entry) => entry.entryId),
-
 			unplacedEntries: sortedUnplaced
 		};
 	}
@@ -1004,13 +998,13 @@ export function buildCrosswordLayout(
 	let bestResult: AttemptResult | null = null;
 
 	for (let attemptIndex = 0; attemptIndex < attempts; attemptIndex += 1) {
-		const attempt = generateWorkingAttempt(preparedEntries, attemptIndex);
+		const attempt = generateWorkingAttempt(preparedEntries, attemptIndex, config);
 
 		const unplaced = sortUnplacedEntries([...baseUnplaced, ...attempt.unplaced], entries);
 
 		const layout = finalizeLayout(attempt.grid, attempt.placements, unplaced);
 
-		const score = calculateLayoutScore(layout);
+		const score = calculateLayoutScore(layout, config);
 
 		if (!bestResult || score > bestResult.score) {
 			bestResult = {

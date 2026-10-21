@@ -32,6 +32,8 @@
 
 	import { buildCrosswordLayout } from '$lib/features/crossword/crossword-generator';
 
+	import { CROSSWORD_PDF_MODES } from '$lib/features/crossword/crossword-pdf-modes';
+
 	import type { CrosswordImportCommit } from '$lib/features/crossword/crossword-import.types';
 
 	import {
@@ -218,16 +220,9 @@
 
 		generationTimer = setTimeout(() => {
 			try {
-				const shouldUsePortraitLayout =
-					pdfMode === 'complete-part-2' ||
-					pdfMode === 'complete-part-3' ||
-					pdfMode === 'questions-only-a3' ||
-					pdfMode === 'puzzle-and-questions-a3' ||
-					pdfMode === 'puzzle-first-letters-a3';
-
 				const nextLayout = buildCrosswordLayout(entriesSnapshot, {
 					attempts: CROSSWORD_LIVE_ATTEMPTS,
-					layoutMode: shouldUsePortraitLayout ? 'portrait' : 'landscape'
+					layoutMode: CROSSWORD_PDF_MODES[pdfMode].layoutMode
 				});
 
 				if (requestId !== generationRequestId) {

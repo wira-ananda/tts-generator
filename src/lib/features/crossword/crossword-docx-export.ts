@@ -1,5 +1,7 @@
 import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 
+import { createFileTimestamp, triggerBlobDownload } from '$lib/utils/download';
+
 export type CrosswordDocxExportEntry = {
 	number: number;
 	question: string;
@@ -95,43 +97,7 @@ export function getCrosswordDocxExportReadiness(
 }
 
 function createCrosswordDocxFileName(): string {
-	const now = new Date();
-
-	const pad = (value: number): string => {
-		return String(value).padStart(2, '0');
-	};
-
-	const date = [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join('-');
-
-	const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-
-	return `tts-soal-jawaban-${date}-${time}.docx`;
-}
-
-function triggerDocxDownload(blob: Blob, fileName: string): void {
-	const url = URL.createObjectURL(blob);
-
-	const anchor = document.createElement('a');
-
-	anchor.href = url;
-
-	anchor.download = fileName;
-
-	anchor.rel = 'noreferrer';
-
-	document.body.appendChild(anchor);
-
-	anchor.click();
-
-	anchor.remove();
-
-	/*
-	 * Revoke pada event-loop berikutnya supaya browser
-	 * sudah sempat mengambil Blob URL.
-	 */
-	setTimeout(() => {
-		URL.revokeObjectURL(url);
-	}, 0);
+	return `tts-soal-jawaban-${createFileTimestamp(new Date(), { withSeconds: true })}.docx`;
 }
 
 /**
@@ -215,7 +181,7 @@ export async function downloadCurrentCrosswordDocx(
 
 	const fileName = createCrosswordDocxFileName();
 
-	triggerDocxDownload(blob, fileName);
+	triggerBlobDownload(blob, fileName);
 
 	return {
 		fileName,

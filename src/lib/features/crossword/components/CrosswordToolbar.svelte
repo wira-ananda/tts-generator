@@ -10,6 +10,8 @@
 		CrosswordPdfMode
 	} from '$lib/features/crossword/crossword-export.types';
 
+	import { CROSSWORD_PDF_MODE_OPTIONS } from '$lib/features/crossword/crossword-pdf-modes';
+
 	import type { CrosswordEntry } from '$lib/features/crossword/crossword.types';
 
 	type Props = {
@@ -169,10 +171,8 @@
 				gap-2
 			"
 		>
-			<!-- Current questions only -->
 			<CrosswordDocxExportButton {entries} />
 
-			<!-- Mode PDF: lengkap / TTS+soal saja / TTS kosong saja -->
 			<select
 				aria-label="Mode download PDF"
 				value={pdfMode}
@@ -203,31 +203,11 @@
 				"
 				onchange={handlePdfModeChange}
 			>
-				<option value="complete"> PDF Lengkap (TTS + Soal + Kunci) </option>
-
-				<option value="complete-part-2"> Lengkap Part 2 (A3+ Portrait: TTS Awalan + Soal) </option>
-
-				<option value="complete-part-3">
-					Lengkap Part 3 (A3+ Portrait: TTS Awalan + Soal + TTS Kosong)
-				</option>
-
-				<option value="questions-only-a3"> Soal saja (A3+ Portrait) </option>
-
-				<option value="puzzle-first-letters"> TTS Awalan (huruf pertama) </option>
-
-				<option value="puzzle-only"> TTS Kosong saja </option>
-
-				<option value="puzzle-and-questions"> TTS Kosong + Soal </option>
-
-				<option value="questions-only"> Soal saja </option>
-
-				<option value="answer-key-only"> Kunci Jawaban saja </option>
-				<option value="puzzle-and-questions-a3"> Soal + TTS Kosong (A3 Portrait) </option>
-
-				<option value="puzzle-first-letters-a3"> TTS Awalan saja (A3+ Portrait) </option>
+				{#each CROSSWORD_PDF_MODE_OPTIONS as option (option.value)}
+					<option value={option.value}>{option.label}</option>
+				{/each}
 			</select>
 
-			<!-- Complete TTS PDF -->
 			<button
 				type="button"
 				disabled={!canDownload || isDownloading}

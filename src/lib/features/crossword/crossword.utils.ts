@@ -152,8 +152,6 @@ export function createEmptyCrosswordLayout(): CrosswordLayout {
 
 		cells: [],
 
-		unplacedEntryIds: [],
-
 		unplacedEntries: [],
 
 		width: 0,
